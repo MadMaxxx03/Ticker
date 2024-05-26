@@ -66,6 +66,36 @@ double MainWindow::to_degrees(double radians) {
     return radians / (M_PI / 180.0);
 }
 
+//Мат модель с наблюдателем
+QVector<double> MainWindow::mathModelObserver(double t, const QVector<double>& model, const QVector<double>& constants){
+
+    const double m1 = constants[0];
+    const double m2 = constants[1];
+    const double m3 = constants[2];
+    const double l = constants[3];
+    const double Ff = constants[4];
+    const double Fr = constants[5];
+    const double Fc = constants[6];
+    const double b2 = constants[7];
+    const double k2 = constants[8];
+
+    const double x = model[0];
+    const double V = model[1];
+    const double fi = model[2];
+    const double W = model[3];
+
+    double M1 = (m1 + m2 + m3);
+    double M2 = (m2 + m3 / 2);
+    double M3 = (m2 + m3 / 3);
+
+    double x_dt = V;
+    double V_dt = (Fc*M3*l*l-M2*M3*l*l*l*W*W*sin(fi)+M2*M2*l*l*9.81*cos(fi)*sin(fi)-M2*l*cos(fi)*(b2*W+k2*fi) )/(M1*M3*l*l-M2*M2*l*l*cos(fi)*cos(fi));
+    double fi_dt = W;
+    double W_dt = (M1*M2*9.81*l*sin(fi)-M1*(b2*W+k2*fi)+Fc*M2*l*cos(fi)-M2*M2*l*l*W*W*sin(fi)*cos(fi))/(M1*M3*l*l-M2*M2*l*l*cos(fi)*cos(fi));
+
+    return {x_dt, V_dt, fi_dt, W_dt};
+}
+
 //Мат модель
 QVector<double> MainWindow::mathModel(double t, const QVector<double>& model, const QVector<double>& constants){
 
@@ -95,7 +125,6 @@ QVector<double> MainWindow::mathModel(double t, const QVector<double>& model, co
 
     return {x_dt, V_dt, fi_dt, W_dt};
 }
-
 
 //Рассчет управления
 QVector<double> MainWindow::control(double dt, const QVector<double>& model, const QVector<double>& u){

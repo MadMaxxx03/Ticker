@@ -1,0 +1,293 @@
+clc
+close all;
+sys.m1 = 0.5;
+sys.m2 = 0.15;
+sys.m3 = 0.05;
+sys.l = 0.15;
+sys.b2 = 0.01;
+sys.k2 = 0.0;
+sys.F_sopr = 0;
+sys.F_tr = 0.0;
+sys.g = 9.81;
+sys.l_max = 0.3;
+sys.l_min = -0.3;
+sys.alpha = 15*pi/180;
+sys.l_max = 0.3;
+sys.F_upr = 0;
+flag = 0;
+N = @Nabl;
+F1_PS = @dz_01_PS_func;
+F2_PS = @dz_02_PS_func;
+F3_PS = @dz_03_PS_func;
+y0 = [0;0;pi/6;0.0];
+t = 0:0.01:10;
+t0 = 0;
+t_end = 10;
+h = 0.01;
+otvet = zeros(4,length(t));
+otvet(:,1)=y0;
+
+sys.alpha = 15*pi/180;
+U(1) = 0;
+x = otvet(:,1);
+    M = [1, 0 ,0, 0; ...
+        0, 1, 0, -((sys.m2+(sys.m3)/2)*cos(x(3))*sys.l)/(sys.m1 + sys.m2 + sys.m3);...
+        0, 0, 1, 0;...
+        0, -((sys.m2+(sys.m3)/2)*cos(x(3))*sys.l)/((sys.m2+(sys.m3)/4)*(sys.l)^2), 0, 1];
+    A = [0, 1, 0, 0; ...
+        0, 0, 0, 0; ...
+        0, 0, 0, 1; ...
+        0, 0, ((sys.m2+(sys.m3)/2)*sys.g*cos(x(3))-sys.b2)/((sys.m2+(sys.m3)/4)*(sys.l)), -sys.k2/((sys.m2+(sys.m3)/4)*(sys.l)^2)];
+    B = [0; 1/(sys.m1 + sys.m2 + sys.m3); 0; 0];
+    A = (M^(-1))*A;
+    B = (M^(-1))*B;
+    C = [1,1,1,1];
+    sys.H = [0, 0, 0, 1]*(([C', A'*C', (A'^2)*C', (A'^3)*C'])^(-1))*(A'^4 + 2.6*8*(A'^3) + 3.4*64*(A'^2)+2.6*512*A' + 4096*eye(4));
+    x_n = zeros(4,length(t));
+    x_n(:,1)=y0;
+for i=1:length(t)
+    x_n(:,i+1) = ode4(N, t0+(i-1)*h, h, t0+i*h, otvet(:,i),sys,x_n(:,i)); 
+    sys.F_upr = 0;
+    U(i) = sys.F_upr;
+    Y = ode4(F1_PS, t0+(i-1)*h, h, t0+i*h, otvet(:,i),sys,0);
+    otvet(:,i+1) = Y;
+end
+
+
+figure
+subplot(3,1,1);
+title ("Перевернутый маятник на подвижной опоре")
+yyaxis left
+plot(t,otvet(1,1:length(t)));
+grid on;
+ylabel('x, м');
+yyaxis right
+plot(t,otvet(2,1:length(t)));
+grid on;
+ylabel('x_s_p_e_e_d, м/с');
+xlabel('t, c');
+
+subplot(3,1,2);
+plot(t,U(1:length(t)));
+xlabel('t, c');
+ylabel('F_у_п_р, H');
+grid on;
+
+subplot(3,1,3);
+yyaxis left
+plot(t,otvet(3,1:length(t))*180/pi);
+grid on;
+ylabel('fi, град.');
+yyaxis right
+plot(t,otvet(4,1:length(t))*180/pi);
+grid on;
+ylabel('fi_s_p_e_e_d, град/с');
+xlabel('t, c');
+
+U(1) = 0;
+x = otvet(:,1);
+    M = [1, 0 ,0, 0; ...
+        0, 1, 0, -((sys.m2+(sys.m3)/2)*cos(x(3))*sys.l)/(sys.m1 + sys.m2 + sys.m3);...
+        0, 0, 1, 0;...
+        0, -((sys.m2+(sys.m3)/2)*cos(x(3))*sys.l)/((sys.m2+(sys.m3)/4)*(sys.l)^2), 0, 1];
+    A = [0, 1, 0, 0; ...
+        0, 0, 0, 0; ...
+        0, 0, 0, 1; ...
+        0, 0, ((sys.m2+(sys.m3)/2)*sys.g*cos(x(3))-sys.b2)/((sys.m2+(sys.m3)/4)*(sys.l)), -sys.k2/((sys.m2+(sys.m3)/4)*(sys.l)^2)];
+    B = [0; 1/(sys.m1 + sys.m2 + sys.m3); 0; 0];
+    A = (M^(-1))*A;
+    B = (M^(-1))*B;
+    C = [1,1,1,1];
+    sys.H = [0, 0, 0, 1]*(([C', A'*C', (A'^2)*C', (A'^3)*C'])^(-1))*(A'^4 + 2.6*8*(A'^3) + 3.4*64*(A'^2)+2.6*512*A' + 4096*eye(4));
+    x_n = zeros(4,length(t));
+    x_n(:,1)=y0;
+for i=1:length(t)
+    x_n(:,i+1) = ode4(N, t0+(i-1)*h, h, t0+i*h, otvet(:,i),sys,x_n(:,i)); 
+    sys.F_upr = 0;
+    U(i) = sys.F_upr;
+    Y = ode4(F2_PS, t0+(i-1)*h, h, t0+i*h, otvet(:,i),sys,0);
+        if (Y(1) >= 0.3)
+        Y(1) = 0.3;
+        Y(2) = 0;
+    elseif (Y(1) <= -0.3)
+        Y(1) = -0.3;
+        Y(2) = 0;
+    end
+    otvet(:,i+1) = Y;
+end
+
+
+figure
+subplot(3,1,1);
+title ("Перевернутый маятник на подвижной опоре")
+yyaxis left
+plot(t,otvet(1,1:length(t)));
+grid on;
+ylabel('x, м');
+yyaxis right
+plot(t,otvet(2,1:length(t)));
+grid on;
+ylabel('x_s_p_e_e_d, м/с');
+xlabel('t, c');
+
+subplot(3,1,2);
+plot(t,U(1:length(t)));
+xlabel('t, c');
+ylabel('F_у_п_р, H');
+grid on;
+
+subplot(3,1,3);
+yyaxis left
+plot(t,otvet(3,1:length(t))*180/pi);
+grid on;
+ylabel('fi, град.');
+yyaxis right
+plot(t,otvet(4,1:length(t))*180/pi);
+grid on;
+ylabel('fi_s_p_e_e_d, град/с');
+xlabel('t, c');
+
+
+
+U(1) = 0;
+x = otvet(:,1);
+  M = [1, 0 ,0, 0; ...
+        0, 1, 0, -((sys.m2+(sys.m3)/2)*(cos(x(3))-tan(sys.alpha)*sin(x(3)))*sys.l)/((sys.m1+sys.m2+sys.m3)/(cos(sys.alpha)^2));...
+        0, 0, 1, 0;...
+        0, -((sys.m2+(sys.m3)/2)*(cos(x(3))-tan(sys.alpha)*sin(x(3)))*sys.l)/((sys.m2+(sys.m3)/3)*(sys.l)^2), 0, 1];
+    A = [0, 1, 0, 0; ...
+        0, 0, ((sys.m2 + (sys.m3)/2)*(sys.l*(x(4)^2)*(cos(x(3))-tan(sys.alpha)*sin(x(3)))))/((sys.m1+sys.m2+sys.m3)/(cos(sys.alpha)^2)), ((sys.m2 + (sys.m3)/2)*(sys.l*(x(4))*2*(sin(x(3))+tan(sys.alpha)*cos(x(3)))))/((sys.m1+sys.m2+sys.m3)/(cos(sys.alpha)^2)); ...
+        0, 0, 0, 1; ...
+        0, 0, ((sys.m2+(sys.m3)/2)*sys.g*cos(x(3))-sys.b2)/((sys.m2+(sys.m3)/4)*(sys.l)), -sys.k2/((sys.m2+(sys.m3)/4)*(sys.l)^2)];
+    B = [0; 1/(sys.m1 + sys.m2 + sys.m3); 0; 0];
+    A = (M^(-1))*A;
+    B = (M^(-1))*B;
+    C = [1,1,1,1];
+    sys.H = [0, 0, 0, 1]*(([C', A'*C', (A'^2)*C', (A'^3)*C'])^(-1))*(A'^4 + 2.6*8*(A'^3) + 3.4*64*(A'^2)+2.6*512*A' + 4096*eye(4));
+    x_n = zeros(4,length(t));
+    x_n(:,1)=y0;
+for i=1:length(t)
+    x_n(:,i+1) = ode4(N, t0+(i-1)*h, h, t0+i*h, otvet(:,i),sys,x_n(:,i)); 
+    sys.F_upr = 0;
+    U(i) = sys.F_upr;
+    Y = ode4(F3_PS, t0+(i-1)*h, h, t0+i*h, otvet(:,i),sys,0);
+        if (Y(1) >= 0.3)
+        Y(1) = 0.3;
+        Y(2) = 0;
+    elseif (Y(1) <= -0.3)
+        Y(1) = -0.3;
+        Y(2) = 0;
+    end
+    otvet(:,i+1) = Y;
+end
+
+
+figure
+subplot(3,1,1);
+title ("Перевернутый маятник на подвижной негоризонтальной опоре")
+yyaxis left
+plot(t,otvet(1,1:length(t)));
+grid on;
+ylabel('x, м');
+yyaxis right
+plot(t,otvet(2,1:length(t)));
+grid on;
+ylabel('x_s_p_e_e_d, м/с');
+xlabel('t, c');
+
+subplot(3,1,2);
+plot(t,U(1:length(t)));
+xlabel('t, c');
+ylabel('F_у_п_р, H');
+grid on;
+
+subplot(3,1,3);
+yyaxis left
+plot(t,otvet(3,1:length(t))*180/pi);
+grid on;
+ylabel('fi, град.');
+yyaxis right
+plot(t,otvet(4,1:length(t))*180/pi);
+grid on;
+ylabel('fi_s_p_e_e_d, град/с');
+xlabel('t, c');
+
+
+
+function dx = dz_01_PS_func(t,x,sys,x_n)
+    dx = zeros(4,1);
+    M = [1, 0 ,0, 0; ...
+        0, 1, 0, -((sys.m2+(sys.m3)/2)*cos(x(3))*sys.l)/(sys.m1 + sys.m2 + sys.m3);...
+        0, 0, 1, 0;...
+        0, -((sys.m2+(sys.m3)/2)*cos(x(3))*sys.l)/((sys.m2+(sys.m3)/4)*(sys.l)^2), 0, 1];
+    A = [0, 1, 0, 0; ...
+        0, 0, -((sys.m2+(sys.m3)/2)*x(4)*x(4)*sys.l*cos(x(3)))/(sys.m1 + sys.m2 + sys.m3), -(2*(sys.m2+(sys.m3)/2)*x(4)*sys.l*sin(x(3)))/(sys.m1 + sys.m2 + sys.m3); ...
+        0, 0, 0, 1; ...
+        0, 0, ((sys.m2+(sys.m3)/2)*sys.g*cos(x(3))-sys.b2)/((sys.m2+(sys.m3)/4)*(sys.l)), -sys.k2/((sys.m2+(sys.m3)/4)*(sys.l)^2)];
+    B = [0; 1/(sys.m1 + sys.m2 + sys.m3); 0; 0];
+    A = (M^(-1))*A;
+    B = (M^(-1))*B;
+    dx = A*[x(1); x(2); x(3); x(4)] + B*sys.F_upr;
+end
+
+
+
+function dx = dz_02_PS_func(t,x,sys,x_n)
+    dx = zeros(4,1);
+    M = [1, 0 ,0, 0; ...
+        0, 1, 0, -((sys.m2+(sys.m3)/2)*cos(x(3))*sys.l)/(sys.m1 + sys.m2 + sys.m3);...
+        0, 0, 1, 0;...
+        0, -((sys.m2+(sys.m3)/2)*cos(x(3))*sys.l)/((sys.m2+(sys.m3)/4)*(sys.l)^2), 0, 1];
+    A = [0, 1, 0, 0; ...
+        0, 0, -((sys.m2+(sys.m3)/2)*x(4)*x(4)*sys.l*cos(x(3)))/(sys.m1 + sys.m2 + sys.m3), -(2*(sys.m2+(sys.m3)/2)*x(4)*sys.l*sin(x(3)))/(sys.m1 + sys.m2 + sys.m3); ...
+        0, 0, 0, 1; ...
+        0, 0, ((sys.m2+(sys.m3)/2)*sys.g*cos(x(3))-sys.b2)/((sys.m2+(sys.m3)/4)*(sys.l)), -sys.k2/((sys.m2+(sys.m3)/4)*(sys.l)^2)];
+    B = [0; 1/(sys.m1 + sys.m2 + sys.m3); 0; 0];
+    A = (M^(-1))*A;
+    B = (M^(-1))*B;
+    dx = A*[x(1); x(2); x(3); x(4)] + B*sys.F_upr;
+end
+
+function dx = dz_03_PS_func(t,x,sys,x_n)
+    dx = zeros(4,1);
+    M = [1, 0 ,0, 0; ...
+        0, 1, 0, -((sys.m2+(sys.m3)/2)*(cos(x(3))-tan(sys.alpha)*sin(x(3)))*sys.l)/((sys.m1+sys.m2+sys.m3)/(cos(sys.alpha)^2));...
+        0, 0, 1, 0;...
+        0, -((sys.m2+(sys.m3)/2)*(cos(x(3))-tan(sys.alpha)*sin(x(3)))*sys.l)/((sys.m2+(sys.m3)/3)*(sys.l)^2), 0, 1];
+    A = [0, 1, 0, 0; ...
+        0, 0, ((sys.m2 + (sys.m3)/2)*(sys.l*(x(4)^2)*(cos(x(3))-tan(sys.alpha)*sin(x(3)))))/((sys.m1+sys.m2+sys.m3)/(cos(sys.alpha)^2)), ((sys.m2 + (sys.m3)/2)*(sys.l*(x(4))*2*(sin(x(3))+tan(sys.alpha)*cos(x(3)))))/((sys.m1+sys.m2+sys.m3)/(cos(sys.alpha)^2)); ...
+        0, 0, 0, 1; ...
+        0, 0, ((sys.m2+(sys.m3)/2)*sys.g*cos(x(3))-sys.b2)/((sys.m2+(sys.m3)/4)*(sys.l)), -sys.k2/((sys.m2+(sys.m3)/4)*(sys.l)^2)];
+    B = [0; 1/(sys.m1 + sys.m2 + sys.m3); 0; 0];
+    A = (M^(-1))*A;
+    B = (M^(-1))*B;
+    dx = A*[x(1); x(2); x(3); x(4)] + B*(sys.F_upr - (sys.m1 + sys.m2 + sys.m3)*sys.g*sin(sys.alpha)*cos(sys.alpha)) ;
+end
+function dx = Nabl(t,x,sys,x_n)
+    dx = zeros(4,1);
+    M = [1, 0 ,0, 0; ...
+        0, 1, 0, -((sys.m2+(sys.m3)/2)*(cos(x(3))-tan(sys.alpha)*sin(x(3)))*sys.l)/((sys.m1+sys.m2+sys.m3)/(cos(sys.alpha)^2));...
+        0, 0, 1, 0;...
+        0, -((sys.m2+(sys.m3)/2)*(cos(x(3))-tan(sys.alpha)*sin(x(3)))*sys.l)/((sys.m2+(sys.m3)/3)*(sys.l)^2), 0, 1];
+    A = [0, 1, 0, 0; ...
+        0, 0, ((sys.m2 + (sys.m3)/2)*(sys.l*(x(4)^2)*(cos(x(3))-tan(sys.alpha)*sin(x(3)))))/((sys.m1+sys.m2+sys.m3)/(cos(sys.alpha)^2)), ((sys.m2 + (sys.m3)/2)*(sys.l*(x(4))*2*(sin(x(3))+tan(sys.alpha)*cos(x(3)))))/((sys.m1+sys.m2+sys.m3)/(cos(sys.alpha)^2)); ...
+        0, 0, 0, 1; ...
+        0, 0, ((sys.m2+(sys.m3)/2)*sys.g*cos(x(3))-sys.b2)/((sys.m2+(sys.m3)/4)*(sys.l)), -sys.k2/((sys.m2+(sys.m3)/4)*(sys.l)^2)];
+    B = [0; 1/(sys.m1 + sys.m2 + sys.m3); 0; 0];
+    A = (M^(-1))*A;
+    B = (M^(-1))*B;
+    C = [1,1,1,1];
+    dx = A*x_n + B*sys.F_upr + sys.H*(x-C*x_n);
+end
+function yout = ode4(F,t0,h,tfinal,y0,sys,x_n)
+     y = y0;
+      yout = y;
+      for t = t0 : h : tfinal-h
+         s1 = F(t,y,sys,x_n);
+         s2 = F(t+h/2, y+h*s1/2,sys,x_n);
+         s3 = F(t+h/2, y+h*s2/2,sys,x_n);
+         s4 = F(t+h, y+h*s3,sys,x_n);
+         y = y + h*(s1 + 2*s2 + 2*s3 + s4)/6;
+         yout = [y];
+      end
+end

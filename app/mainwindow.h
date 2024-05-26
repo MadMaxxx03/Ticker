@@ -19,6 +19,20 @@
 #include <iomanip>
 #include <QSettings>
 #include <QApplication>
+#include <Qt3DCore/QEntity>
+#include <Qt3DCore/QTransform>
+#include <Qt3DExtras/Qt3DWindow>
+#include <Qt3DExtras/QPhongMaterial>
+#include <Qt3DExtras/QCuboidMesh>
+#include <Qt3DExtras/QSphereMesh>
+#include <Qt3DExtras/QCylinderMesh>
+#include <Qt3DRender/QCamera>
+#include <Qt3DExtras/QForwardRenderer>
+#include <Qt3DExtras/QOrbitCameraController>
+#include <QPropertyAnimation>
+#include <QMatrix4x4>
+#include <Qt3DRender/QDirectionalLight>
+#include <QDateTime>
 #include "qcustomplot.h"
 
 QT_BEGIN_NAMESPACE
@@ -34,11 +48,14 @@ public:
     ~MainWindow();
 
 private slots:
-    void onSimulationClicked();
+    void on2DSimulationClicked();
+    void on3DSimulationClicked();
     void onSetValuesClicked();
     void on_saveButton_clicked();
     void on_startButton_clicked();
+    void on_start3DButton_clicked();
     void timer_slot();
+    void timer3D_slot();
 
 public:
     static QVector<double> readIni(QString path, QString category);
@@ -47,6 +64,7 @@ public:
     static QVector<double> mult_vector(const QVector<double>& vec1, double x);
     static QVector<double> rungeKutta(double t0, double tf, int steps, const QVector<double>& y0, const QVector<double>& constants);
     static QVector<double> mathModel(double t, const QVector<double>& model, const QVector<double>& constants);
+    static QVector<double> mathModelObserver(double t, const QVector<double>& model, const QVector<double>& constants);
     static QVector<double> control(double dt, const QVector<double>& model, const QVector<double>& u);
     static double to_degrees(double radians);
 
@@ -54,13 +72,23 @@ private:
     Ui::MainWindow *ui;
 
     QTimer *timer;
+    QTimer *timer3D;
     double beginT, stepT, T;
     int penSize;
 
-    QAction *modelingAction;
+    Qt3DCore::QEntity *rootEntity;
+    Qt3DExtras::Qt3DWindow *view;
+    QWidget *container;
+    Qt3DCore::QTransform *cartTransform;
+    Qt3DCore::QTransform *rodTransform;
+    QPropertyAnimation *cartAnimation;
+
+    QAction *D2ModelingAction;
+    QAction *D3ModelingAction;
     QAction *initValAction;
 
     QStackedWidget *stackedWidget;
+    QWidget *D3Widget;
     QWidget *centralWidget;
     QWidget *initialValuesWidget;
 
@@ -107,6 +135,7 @@ private:
 
     QPushButton *saveButton;
     QPushButton *startButton;
+    QPushButton *start3DButton;
 
 };
 #endif // MAINWINDOW_H

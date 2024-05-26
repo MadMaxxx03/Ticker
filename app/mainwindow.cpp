@@ -15,6 +15,9 @@ MainWindow::MainWindow(QWidget *parent)
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(timer_slot()));
 
+    timer3D = new QTimer(this);
+    connect(timer3D, SIGNAL(timeout()), this, SLOT(timer3D_slot()));
+
     QFont labelFont("Times", 20);
     QFont axisFont("Arial", 25);
     penSize = 5;
@@ -22,9 +25,13 @@ MainWindow::MainWindow(QWidget *parent)
     QMenuBar * menuBar = this->menuBar();
     QMenu * fileMenu = menuBar->addMenu("Режим");
 
-    modelingAction = new QAction("Моделирование", this);
-    connect(modelingAction, &QAction::triggered, this, &MainWindow::onSimulationClicked);
-    fileMenu->addAction(modelingAction);
+    D2ModelingAction = new QAction("2D Моделирование", this);
+    connect(D2ModelingAction, &QAction::triggered, this, &MainWindow::on2DSimulationClicked);
+    fileMenu->addAction(D2ModelingAction);
+
+    D3ModelingAction = new QAction("3D Моделирование", this);
+    connect(D3ModelingAction, &QAction::triggered, this, &MainWindow::on3DSimulationClicked);
+    fileMenu->addAction(D3ModelingAction);
 
     initValAction = new QAction("Задать начальные значения", this);
     connect(initValAction, &QAction::triggered, this, &MainWindow::onSetValuesClicked);
@@ -196,6 +203,142 @@ MainWindow::MainWindow(QWidget *parent)
     stackedWidget->addWidget(initialValuesWidget);
     setCentralWidget(stackedWidget);
     stackedWidget->setCurrentWidget(centralWidget);
+
+    // Создание окна для отображения 3D-графики
+    D3Widget = new QWidget;
+    QVBoxLayout *D3layout = new QVBoxLayout;
+
+    view = new Qt3DExtras::Qt3DWindow();
+    container = QWidget::createWindowContainer(view);
+    view->defaultFrameGraph()->setClearColor(QColor(QRgb(0x4d4d4f)));
+
+    // Корневая сущность
+    rootEntity = new Qt3DCore::QEntity();
+
+    // Кнопка запуска
+    start3DButton = new QPushButton("Запуск");
+    start3DButton->setFont(labelFont);
+    start3DButton->setFixedWidth(200);
+    start3DButton->setFixedHeight(40);
+    connect(start3DButton, &QPushButton::clicked, this, &MainWindow::on_start3DButton_clicked);
+
+    D3layout->addWidget(container);
+    D3layout->addWidget(start3DButton);
+    D3Widget->setLayout(D3layout);
+    stackedWidget->addWidget(D3Widget);
+
+    // Создание камеры
+    Qt3DRender::QCamera *camera = view->camera();
+    camera->lens()->setPerspectiveProjection(45.0f, 16.0f / 9.0f, 0.1f, 1000.0f);
+    camera->setPosition(QVector3D(0, 0, 20.0f));
+    camera->setViewCenter(QVector3D(0, 0, 0));
+
+    // Добавление контроллера камеры
+    Qt3DExtras::QOrbitCameraController *camController = new Qt3DExtras::QOrbitCameraController(rootEntity);
+    camController->setCamera(camera);
+
+    // Создание неподвижной основной конструкции
+    Qt3DCore::QEntity *mainStructureEntity = new Qt3DCore::QEntity(rootEntity);
+    Qt3DCore::QTransform *mainStructureTransform = new Qt3DCore::QTransform();
+    mainStructureEntity->addComponent(mainStructureTransform);
+
+    // Создание верхней планки
+    Qt3DCore::QEntity *topBarEntity = new Qt3DCore::QEntity(mainStructureEntity);
+    Qt3DExtras::QCuboidMesh *topBarMesh = new Qt3DExtras::QCuboidMesh();
+    topBarMesh->setXExtent(10.0f);
+    topBarMesh->setYExtent(0.5f);
+    topBarMesh->setZExtent(0.5f);
+    Qt3DExtras::QPhongMaterial *topBarMaterial = new Qt3DExtras::QPhongMaterial();
+    topBarMaterial->setDiffuse(QColor(QRgb(0x404040))); // Серый цвет
+    topBarEntity->addComponent(topBarMesh);
+    topBarEntity->addComponent(topBarMaterial);
+
+    Qt3DCore::QTransform *topBarTransform = new Qt3DCore::QTransform();
+    topBarTransform->setTranslation(QVector3D(0.0f, 0.0f, 0.0f));
+    topBarEntity->addComponent(topBarTransform);
+
+
+    // Создание каретки
+    Qt3DCore::QEntity *cartEntity = new Qt3DCore::QEntity(mainStructureEntity);
+    Qt3DExtras::QCuboidMesh *cartMesh = new Qt3DExtras::QCuboidMesh();
+    cartMesh->setXExtent(1.0f);
+    cartMesh->setYExtent(1.0f);
+    cartMesh->setZExtent(1.0f);
+    cartEntity->addComponent(cartMesh);
+    Qt3DExtras::QPhongMaterial *cartMaterial = new Qt3DExtras::QPhongMaterial();
+    cartMaterial->setDiffuse(QColor(QRgb(0xffd700))); // Жёлтый цвет
+    cartEntity->addComponent(cartMaterial);
+
+    cartTransform = new Qt3DCore::QTransform();
+    cartEntity->addComponent(cartTransform);
+
+    // Создание боковых стоек
+    Qt3DCore::QEntity *leftBarEntity = new Qt3DCore::QEntity(mainStructureEntity);
+    Qt3DExtras::QCuboidMesh *sideBarMesh = new Qt3DExtras::QCuboidMesh();
+    sideBarMesh->setXExtent(1.0f);
+    sideBarMesh->setYExtent(10.0f);
+    sideBarMesh->setZExtent(1.0f);
+    leftBarEntity->addComponent(sideBarMesh);
+    leftBarEntity->addComponent(cartMaterial);  // Используем тот же материал, что и для каретки
+
+    Qt3DCore::QTransform *leftBarTransform = new Qt3DCore::QTransform();
+    leftBarTransform->setTranslation(QVector3D(-5.5f, -5.0f, 0.0f)); // Позиционирование слева
+    leftBarEntity->addComponent(leftBarTransform);
+
+    Qt3DCore::QEntity *rightBarEntity = new Qt3DCore::QEntity(mainStructureEntity);
+    rightBarEntity->addComponent(sideBarMesh);
+    rightBarEntity->addComponent(cartMaterial);  // Используем тот же материал, что и для каретки
+
+    Qt3DCore::QTransform *rightBarTransform = new Qt3DCore::QTransform();
+    rightBarTransform->setTranslation(QVector3D(5.5f, -5.0f, 0.0f)); // Позиционирование справа
+    rightBarEntity->addComponent(rightBarTransform);
+
+    // Создание стержня маятника
+    Qt3DCore::QEntity *rodEntity = new Qt3DCore::QEntity(cartEntity);
+    Qt3DExtras::QCylinderMesh *rodMesh = new Qt3DExtras::QCylinderMesh();
+    rodMesh->setRadius(0.1f);
+    rodMesh->setLength(5.0f);
+    Qt3DExtras::QPhongMaterial *rodMaterial = new Qt3DExtras::QPhongMaterial();
+    rodMaterial->setDiffuse(QColor(QRgb(0x808080)));
+    rodEntity->addComponent(rodMesh);
+    rodEntity->addComponent(rodMaterial);
+
+    rodTransform = new Qt3DCore::QTransform();
+    rodTransform->setTranslation(QVector3D(0.0f, -2.5f, 0.0f));
+    rodEntity->addComponent(rodTransform);
+
+    // Создание груза маятника
+    Qt3DCore::QEntity *weightEntity = new Qt3DCore::QEntity(rodEntity);
+    Qt3DExtras::QSphereMesh *weightMesh = new Qt3DExtras::QSphereMesh();
+    weightMesh->setRadius(0.5f);
+    Qt3DExtras::QPhongMaterial *weightMaterial = new Qt3DExtras::QPhongMaterial();
+    weightMaterial->setDiffuse(QColor(QRgb(0xff0000)));
+    weightEntity->addComponent(weightMesh);
+    weightEntity->addComponent(weightMaterial);
+
+    Qt3DCore::QTransform *weightTransform = new Qt3DCore::QTransform();
+    weightTransform->setTranslation(QVector3D(0.0f, -2.5f, 0.0f)); // Изменено: позиционирование относительно стержня
+    weightEntity->addComponent(weightTransform);
+
+    // Создание источника света
+    Qt3DCore::QEntity *lightEntity = new Qt3DCore::QEntity(rootEntity);
+    Qt3DRender::QDirectionalLight *light = new Qt3DRender::QDirectionalLight(lightEntity);
+    light->setColor("white");
+    light->setIntensity(1.0f);
+    lightEntity->addComponent(light);
+
+    Qt3DCore::QTransform *lightTransform = new Qt3DCore::QTransform();
+    lightTransform->setTranslation(QVector3D(0.0f, 20.0f, 20.0f));
+    lightTransform->setRotation(QQuaternion::fromEulerAngles(-45.0f, 0.0f, 0.0f));
+    lightEntity->addComponent(lightTransform);
+
+    // Установка корневой сущности
+    view->setRootEntity(rootEntity);
+
+    //cartAnimation = new QPropertyAnimation(cartTransform, "translation");
+    cartTransform = new Qt3DCore::QTransform();
+    cartTransform->setTranslation(QVector3D(0.0f, 0.0f, 0.0f));
+    cartEntity->addComponent(cartTransform);
 }
 
 MainWindow::~MainWindow()
@@ -212,14 +355,35 @@ QVector<double> val = {values[9], values[10], values[11], values[12]};
 
 QVector<double> result = MainWindow::rungeKutta(0, 1, 100, val, constants);
 
-void MainWindow::onSimulationClicked(){
+void MainWindow::on2DSimulationClicked(){
     stackedWidget->setCurrentWidget(centralWidget);
+    timer3D->stop();
+    //cartAnimation->stop();
+}
+
+void MainWindow::on3DSimulationClicked(){
+    stackedWidget->setCurrentWidget(D3Widget);
+
+    timer->stop();
+    for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
+        plot->clearGraphs();
+        plot->replot();
+    }
+
+    for (int i = 0; i < fields.size(); i++) {
+        fields[i]->setText(QString::number(values[i]));
+        fields[i]->setFont(QFont ("Times", 20));
+    }
+
 }
 
 void MainWindow::onSetValuesClicked(){
     stackedWidget->setCurrentWidget(initialValuesWidget);
 
     timer->stop();
+    timer3D->stop();
+    //cartAnimation->stop();
+
     for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
         plot->clearGraphs();
         plot->replot();
@@ -253,6 +417,43 @@ void MainWindow::on_saveButton_clicked(){
 
     if (isAllOk)
         modifiIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/app/values.ini", newValues);
+}
+
+void MainWindow::on_start3DButton_clicked(){
+    if (isFirstReadFlag){
+        modifiIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/app/values.ini", values);
+        isFirstReadFlag = false;
+    }
+    values = MainWindow::readIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/app/values.ini", "Modified");
+    constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
+    val = {values[9], values[10], values[11], values[12]};
+    result = MainWindow::rungeKutta(0, 1, 100, val, constants);
+
+    //cartAnimation->setDuration(4000);
+    //cartAnimation->setStartValue(QVector3D(-4.0f, 0.0f, 0.0f));
+    //cartAnimation->setEndValue(QVector3D(4.0f, 0.0f, 0.0f));
+    //cartAnimation->setLoopCount(-1); // Бесконечная анимация
+    //cartAnimation->start();
+    timer3D->start(100);
+}
+
+void MainWindow::timer3D_slot(){
+    result = MainWindow::rungeKutta(0, 1, 100, result, constants);
+
+    if (result[0] > l_max || result[0] < -l_max)
+        result[1] = 0;
+
+    float angle = MainWindow::to_degrees(result[2]) - 180;
+    QMatrix4x4 matrix;
+    matrix.rotate(angle, QVector3D(0.0f, 0.0f, 1.0f));
+    matrix.translate(QVector3D(0.0f, -2.5f, 0.0f)); // Позиционирование стержня относительно каретки
+
+    QMatrix4x4 matrix2;
+    matrix2.rotate(0, QVector3D(0.0f, 0.0f, 1.0f));
+    matrix2.translate(QVector3D(result[0] * 10, 0.0f, 0.0f)); // Позиционирование стержня относительно каретки
+
+    cartTransform->setMatrix(matrix2);
+    rodTransform->setMatrix(matrix);
 }
 
 void MainWindow::on_startButton_clicked(){
