@@ -57,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent)
     labelFf = new QLabel("Сила трения");
     labelFr = new QLabel("Сила сопротивления");
     labelFc = new QLabel("Управление");
-    labelb2 = new QLabel("Коэф демпфирования подшипника");
+    labelb2 = new QLabel("Коэф демпф подшипника");
     labelk2 = new QLabel("Коэф жескости пружины");
 
     editm1 = new QLineEdit;
@@ -81,7 +81,7 @@ MainWindow::MainWindow(QWidget *parent)
     labelX = new QLabel("Координата");
     labelV = new QLabel("Скорость");
     labelFi = new QLabel("Угол");
-    labelW = new QLabel("Угловая скорость");
+    labelW = new QLabel("Угл скорость");
 
     editX = new QLineEdit;
     editV = new QLineEdit;
@@ -106,10 +106,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     for (QLineEdit* lineEdit: {editm1, editm2, editm3, editl, editFf, editFr, editFc, editb2}){
         lineEdit->setFont(labelFont);
+        lineEdit->setMaximumWidth(120);
         editsLayout1->addWidget(lineEdit);
         editsLayout1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     }
     editk2->setFont(labelFont);
+    editk2->setMaximumWidth(120);
     editsLayout1->addWidget(editk2);
 
     for (QLabel* label: {labelX, labelV, labelFi}){
@@ -122,10 +124,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     for (QLineEdit* lineEdit: {editX, editV, editFi}){
         lineEdit->setFont(labelFont);
+        lineEdit->setMaximumWidth(120);
         editsLayout2->addWidget(lineEdit);
         editsLayout2->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     }
     editW->setFont(labelFont);
+    editW->setMaximumWidth(120);
     editsLayout2->addWidget(editW);
 
     LEHLayout1->addLayout(labelsLayout1);
@@ -429,11 +433,6 @@ void MainWindow::on_start3DButton_clicked(){
     val = {values[9], values[10], values[11], values[12]};
     result = MainWindow::rungeKutta(0, 1, 100, val, constants);
 
-    //cartAnimation->setDuration(4000);
-    //cartAnimation->setStartValue(QVector3D(-4.0f, 0.0f, 0.0f));
-    //cartAnimation->setEndValue(QVector3D(4.0f, 0.0f, 0.0f));
-    //cartAnimation->setLoopCount(-1); // Бесконечная анимация
-    //cartAnimation->start();
     timer3D->start(100);
 }
 
