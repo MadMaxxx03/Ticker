@@ -49,7 +49,6 @@ public:
 
 private slots:
     void on2DSimulationClicked();
-    void on3DSimulationClicked();
     void onSetValuesClicked();
     void on_saveButton_clicked();
     void on_startButton_clicked();

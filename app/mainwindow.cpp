@@ -29,10 +29,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(D2ModelingAction, &QAction::triggered, this, &MainWindow::on2DSimulationClicked);
     fileMenu->addAction(D2ModelingAction);
 
-    D3ModelingAction = new QAction("3D Моделирование", this);
-    connect(D3ModelingAction, &QAction::triggered, this, &MainWindow::on3DSimulationClicked);
-    fileMenu->addAction(D3ModelingAction);
-
     initValAction = new QAction("Задать начальные значения", this);
     connect(initValAction, &QAction::triggered, this, &MainWindow::onSetValuesClicked);
     fileMenu->addAction(initValAction);
@@ -98,38 +94,46 @@ MainWindow::MainWindow(QWidget *parent)
 
     for (QLabel* label: {labelm1, labelm2, labelm3, labell, labelFf, labelFr, labelFc, labelb2}){
         label->setFont(labelFont);
+        label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         labelsLayout1->addWidget(label);
         labelsLayout1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     }
     labelk2->setFont(labelFont);
+    labelk2->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     labelsLayout1->addWidget(labelk2);
 
     for (QLineEdit* lineEdit: {editm1, editm2, editm3, editl, editFf, editFr, editFc, editb2}){
         lineEdit->setFont(labelFont);
         lineEdit->setMaximumWidth(120);
+        lineEdit->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         editsLayout1->addWidget(lineEdit);
         editsLayout1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     }
     editk2->setFont(labelFont);
     editk2->setMaximumWidth(120);
+    editk2->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     editsLayout1->addWidget(editk2);
 
     for (QLabel* label: {labelX, labelV, labelFi}){
         label->setFont(labelFont);
+        label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         labelsLayout2->addWidget(label);
         labelsLayout2->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     }
     labelW->setFont(labelFont);
+    labelW->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     labelsLayout2->addWidget(labelW);
 
     for (QLineEdit* lineEdit: {editX, editV, editFi}){
         lineEdit->setFont(labelFont);
         lineEdit->setMaximumWidth(120);
+        lineEdit->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         editsLayout2->addWidget(lineEdit);
         editsLayout2->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     }
     editW->setFont(labelFont);
     editW->setMaximumWidth(120);
+    editW->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     editsLayout2->addWidget(editW);
 
     LEHLayout1->addLayout(labelsLayout1);
@@ -146,10 +150,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     LELayout->addLayout(LEVLayout1);
     LELayout->addLayout(LEVLayout2);
-
-    initialValuesLayout->addLayout(LELayout);
-    initialValuesLayout->addWidget(saveButton);
-    initialValuesWidget->setLayout(initialValuesLayout);
 
     centralWidget = new QWidget;
     QVBoxLayout *centralayout = new QVBoxLayout;
@@ -208,28 +208,32 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(stackedWidget);
     stackedWidget->setCurrentWidget(centralWidget);
 
-    // Создание окна для отображения 3D-графики
-    D3Widget = new QWidget;
-    QVBoxLayout *D3layout = new QVBoxLayout;
-
-    view = new Qt3DExtras::Qt3DWindow();
-    container = QWidget::createWindowContainer(view);
-    view->defaultFrameGraph()->setClearColor(QColor(QRgb(0x4d4d4f)));
-
-    // Корневая сущность
-    rootEntity = new Qt3DCore::QEntity();
-
     // Кнопка запуска
     start3DButton = new QPushButton("Запуск");
     start3DButton->setFont(labelFont);
-    start3DButton->setFixedWidth(200);
     start3DButton->setFixedHeight(40);
     connect(start3DButton, &QPushButton::clicked, this, &MainWindow::on_start3DButton_clicked);
 
+    QVBoxLayout *D3layout = new QVBoxLayout;
+
+    // Создание окна для отображения 3D-графики
+    view = new Qt3DExtras::Qt3DWindow();
+    container = QWidget::createWindowContainer(view);
+    view->defaultFrameGraph()->setClearColor(QColor(QRgb(0x4d4d4f)));
+    container->setMinimumSize(QSize(500, 500));
+    container->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
     D3layout->addWidget(container);
-    D3layout->addWidget(start3DButton);
-    D3Widget->setLayout(D3layout);
-    stackedWidget->addWidget(D3Widget);
+    QHBoxLayout *buttonsLayout = new QHBoxLayout;
+    buttonsLayout->addWidget(saveButton);
+    buttonsLayout->addWidget(start3DButton);
+    LELayout->addLayout(D3layout);
+    initialValuesLayout->addLayout(LELayout);
+    initialValuesLayout->addLayout(buttonsLayout);
+    initialValuesWidget->setLayout(initialValuesLayout);
+
+    // Корневая сущность
+    rootEntity = new Qt3DCore::QEntity();
 
     // Создание камеры
     Qt3DRender::QCamera *camera = view->camera();
@@ -362,23 +366,6 @@ QVector<double> result = MainWindow::rungeKutta(0, 1, 100, val, constants);
 void MainWindow::on2DSimulationClicked(){
     stackedWidget->setCurrentWidget(centralWidget);
     timer3D->stop();
-    //cartAnimation->stop();
-}
-
-void MainWindow::on3DSimulationClicked(){
-    stackedWidget->setCurrentWidget(D3Widget);
-
-    timer->stop();
-    for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
-        plot->clearGraphs();
-        plot->replot();
-    }
-
-    for (int i = 0; i < fields.size(); i++) {
-        fields[i]->setText(QString::number(values[i]));
-        fields[i]->setFont(QFont ("Times", 20));
-    }
-
 }
 
 void MainWindow::onSetValuesClicked(){
@@ -386,7 +373,6 @@ void MainWindow::onSetValuesClicked(){
 
     timer->stop();
     timer3D->stop();
-    //cartAnimation->stop();
 
     for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
         plot->clearGraphs();
@@ -449,7 +435,7 @@ void MainWindow::timer3D_slot(){
 
     QMatrix4x4 matrix2;
     matrix2.rotate(0, QVector3D(0.0f, 0.0f, 1.0f));
-    matrix2.translate(QVector3D(result[0] * 10, 0.0f, 0.0f)); // Позиционирование стержня относительно каретки
+    matrix2.translate(QVector3D(result[0] * 100 / 3, 0.0f, 0.0f)); // Позиционирование стержня относительно каретки
 
     cartTransform->setMatrix(matrix2);
     rodTransform->setMatrix(matrix);
