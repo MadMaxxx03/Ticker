@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "secondwindow.h"
 #include <QLabel>
 #include <QDebug>
 #include <QLineEdit>
@@ -33,7 +34,7 @@
 #include <QMatrix4x4>
 #include <Qt3DRender/QDirectionalLight>
 #include <QDateTime>
-#include "qcustomplot.h"
+//#include "qcustomplot.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -48,13 +49,9 @@ public:
     ~MainWindow();
 
 private slots:
-    void on2DSimulationClicked();
-    void onSetValuesClicked();
     void on_saveButton_clicked();
     void on_startButton_clicked();
-    void on_start3DButton_clicked();
     void timer_slot();
-    void timer3D_slot();
 
 public:
     static QVector<double> readIni(QString path, QString category);
@@ -69,9 +66,9 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    SecondWindow *secondWindow;
 
     QTimer *timer;
-    QTimer *timer3D;
     double beginT, stepT, T;
     int penSize;
 
@@ -134,7 +131,6 @@ private:
 
     QPushButton *saveButton;
     QPushButton *startButton;
-    QPushButton *start3DButton;
 
 };
 #endif // MAINWINDOW_H

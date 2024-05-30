@@ -15,23 +15,9 @@ MainWindow::MainWindow(QWidget *parent)
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(timer_slot()));
 
-    timer3D = new QTimer(this);
-    connect(timer3D, SIGNAL(timeout()), this, SLOT(timer3D_slot()));
-
     QFont labelFont("Times", 20);
     QFont axisFont("Arial", 25);
     penSize = 5;
-
-    QMenuBar * menuBar = this->menuBar();
-    QMenu * fileMenu = menuBar->addMenu("Режим");
-
-    D2ModelingAction = new QAction("2D Моделирование", this);
-    connect(D2ModelingAction, &QAction::triggered, this, &MainWindow::on2DSimulationClicked);
-    fileMenu->addAction(D2ModelingAction);
-
-    initValAction = new QAction("Задать начальные значения", this);
-    connect(initValAction, &QAction::triggered, this, &MainWindow::onSetValuesClicked);
-    fileMenu->addAction(initValAction);
 
     initialValuesWidget = new QWidget;
     QVBoxLayout *initialValuesLayout = new QVBoxLayout;
@@ -151,68 +137,12 @@ MainWindow::MainWindow(QWidget *parent)
     LELayout->addLayout(LEVLayout1);
     LELayout->addLayout(LEVLayout2);
 
-    centralWidget = new QWidget;
-    QVBoxLayout *centralayout = new QVBoxLayout;
-    QHBoxLayout *plotLayout1 = new QHBoxLayout;
-    QHBoxLayout *plotLayout2 = new QHBoxLayout;
-    QHBoxLayout *buttonCentralLayout = new QHBoxLayout;
-
-    plot1 = new QCustomPlot();
-    plot2 = new QCustomPlot();
-    plot3 = new QCustomPlot();
-    plot4 = new QCustomPlot();
-
-    for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
-        plot->xAxis->setRange(-1,25);
-        plot->xAxis->setTickLabelFont(axisFont);
-        plot->yAxis->setTickLabelFont(axisFont);
-        plot->xAxis->setLabelFont(labelFont);
-        plot->yAxis->setLabelFont(labelFont);
-        plot->xAxis->setLabel("Время, с");
-        plot->xAxis->setBasePen(QPen(QColor(0, 0, 0), penSize));
-        plot->yAxis->setBasePen(QPen(QColor(0, 0, 0), penSize));
-        plot->xAxis->setTickPen(QPen(QColor(0, 0, 0), penSize));
-        plot->yAxis->setTickPen(QPen(QColor(0, 0, 0), penSize));
-        plot->xAxis->grid()->setPen(QPen(QColor(0, 0, 0, 80), 1));
-        plot->yAxis->grid()->setPen(QPen(QColor(0, 0, 0, 80), 1));
-    }
-    plot1->yAxis->setRange(-0.5, 0.5);
-    plot2->yAxis->setRange(-1, 1);
-    plot3->yAxis->setRange(0, 250);
-    plot4->yAxis->setRange(-400, 800);
-
-    plot1->yAxis->setLabel("Координата, м");
-    plot2->yAxis->setLabel("Скорость, м/c");
-    plot3->yAxis->setLabel("Угол, град");
-    plot4->yAxis->setLabel("Угловая скорость, м/с^2");
-
-    startButton = new QPushButton("Запуск");
-    startButton->setFont(labelFont);
-    startButton->setFixedWidth(200);
-    startButton->setFixedHeight(40);
-    buttonCentralLayout->addWidget(startButton);
-    connect(startButton, &QPushButton::clicked, this, &MainWindow::on_startButton_clicked);
-
-    plotLayout1->addWidget(plot1);
-    plotLayout1->addWidget(plot2);
-    plotLayout2->addWidget(plot3);
-    plotLayout2->addWidget(plot4);
-    centralayout->addLayout(plotLayout1);
-    centralayout->addLayout(plotLayout2);
-    centralayout->addLayout(buttonCentralLayout);
-    centralWidget->setLayout(centralayout);
-
-    stackedWidget = new QStackedWidget;
-    stackedWidget->addWidget(centralWidget);
-    stackedWidget->addWidget(initialValuesWidget);
-    setCentralWidget(stackedWidget);
-    stackedWidget->setCurrentWidget(centralWidget);
 
     // Кнопка запуска
-    start3DButton = new QPushButton("Запуск");
-    start3DButton->setFont(labelFont);
-    start3DButton->setFixedHeight(40);
-    connect(start3DButton, &QPushButton::clicked, this, &MainWindow::on_start3DButton_clicked);
+    startButton = new QPushButton("Запуск");
+    startButton->setFont(labelFont);
+    startButton->setFixedHeight(40);
+    connect(startButton, &QPushButton::clicked, this, &MainWindow::on_startButton_clicked);
 
     QVBoxLayout *D3layout = new QVBoxLayout;
 
@@ -226,7 +156,7 @@ MainWindow::MainWindow(QWidget *parent)
     D3layout->addWidget(container);
     QHBoxLayout *buttonsLayout = new QHBoxLayout;
     buttonsLayout->addWidget(saveButton);
-    buttonsLayout->addWidget(start3DButton);
+    buttonsLayout->addWidget(startButton);
     LELayout->addLayout(D3layout);
     initialValuesLayout->addLayout(LELayout);
     initialValuesLayout->addLayout(buttonsLayout);
@@ -265,7 +195,6 @@ MainWindow::MainWindow(QWidget *parent)
     topBarTransform->setTranslation(QVector3D(0.0f, 0.0f, 0.0f));
     topBarEntity->addComponent(topBarTransform);
 
-
     // Создание каретки
     Qt3DCore::QEntity *cartEntity = new Qt3DCore::QEntity(mainStructureEntity);
     Qt3DExtras::QCuboidMesh *cartMesh = new Qt3DExtras::QCuboidMesh();
@@ -290,7 +219,7 @@ MainWindow::MainWindow(QWidget *parent)
     leftBarEntity->addComponent(cartMaterial);  // Используем тот же материал, что и для каретки
 
     Qt3DCore::QTransform *leftBarTransform = new Qt3DCore::QTransform();
-    leftBarTransform->setTranslation(QVector3D(-5.5f, -5.0f, 0.0f)); // Позиционирование слева
+    leftBarTransform->setTranslation(QVector3D(-5.5f, -5.0f, 0.0f));
     leftBarEntity->addComponent(leftBarTransform);
 
     Qt3DCore::QEntity *rightBarEntity = new Qt3DCore::QEntity(mainStructureEntity);
@@ -298,7 +227,7 @@ MainWindow::MainWindow(QWidget *parent)
     rightBarEntity->addComponent(cartMaterial);  // Используем тот же материал, что и для каретки
 
     Qt3DCore::QTransform *rightBarTransform = new Qt3DCore::QTransform();
-    rightBarTransform->setTranslation(QVector3D(5.5f, -5.0f, 0.0f)); // Позиционирование справа
+    rightBarTransform->setTranslation(QVector3D(5.5f, -5.0f, 0.0f));
     rightBarEntity->addComponent(rightBarTransform);
 
     // Создание стержня маятника
@@ -325,7 +254,7 @@ MainWindow::MainWindow(QWidget *parent)
     weightEntity->addComponent(weightMaterial);
 
     Qt3DCore::QTransform *weightTransform = new Qt3DCore::QTransform();
-    weightTransform->setTranslation(QVector3D(0.0f, -2.5f, 0.0f)); // Изменено: позиционирование относительно стержня
+    weightTransform->setTranslation(QVector3D(0.0f, -2.5f, 0.0f));
     weightEntity->addComponent(weightTransform);
 
     // Создание источника света
@@ -347,6 +276,26 @@ MainWindow::MainWindow(QWidget *parent)
     cartTransform = new Qt3DCore::QTransform();
     cartTransform->setTranslation(QVector3D(0.0f, 0.0f, 0.0f));
     cartEntity->addComponent(cartTransform);
+
+    QVector<double> values = MainWindow::readIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/app/values.ini", "Base");
+    for (int i = 0; i < fields.size(); i++) {
+            fields[i]->setText(QString::number(values[i]));
+            fields[i]->setFont(QFont ("Times", 20));
+    }
+
+    setCentralWidget(initialValuesWidget);
+
+
+    secondWindow = new SecondWindow();
+    //Получение указателей на графики из SecondWindow
+    plot1 = secondWindow->getPlot1();
+    plot2 = secondWindow->getPlot2();
+    plot3 = secondWindow->getPlot3();
+    plot4 = secondWindow->getPlot4();
+
+    secondWindow->setWindowTitle("2D моделирование");
+    secondWindow->resize(800, 600);
+    secondWindow->show();
 }
 
 MainWindow::~MainWindow()
@@ -362,28 +311,6 @@ QVector<double> constants = {values[0], values[1], values[2], values[3], values[
 QVector<double> val = {values[9], values[10], values[11], values[12]};
 
 QVector<double> result = MainWindow::rungeKutta(0, 1, 100, val, constants);
-
-void MainWindow::on2DSimulationClicked(){
-    stackedWidget->setCurrentWidget(centralWidget);
-    timer3D->stop();
-}
-
-void MainWindow::onSetValuesClicked(){
-    stackedWidget->setCurrentWidget(initialValuesWidget);
-
-    timer->stop();
-    timer3D->stop();
-
-    for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
-        plot->clearGraphs();
-        plot->replot();
-    }
-
-    for (int i = 0; i < fields.size(); i++) {
-        fields[i]->setText(QString::number(values[i]));
-        fields[i]->setFont(QFont ("Times", 20));
-    }
-}
 
 void MainWindow::on_saveButton_clicked(){
     QString inputText;
@@ -407,38 +334,6 @@ void MainWindow::on_saveButton_clicked(){
 
     if (isAllOk)
         modifiIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/app/values.ini", newValues);
-}
-
-void MainWindow::on_start3DButton_clicked(){
-    if (isFirstReadFlag){
-        modifiIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/app/values.ini", values);
-        isFirstReadFlag = false;
-    }
-    values = MainWindow::readIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/app/values.ini", "Modified");
-    constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
-    val = {values[9], values[10], values[11], values[12]};
-    result = MainWindow::rungeKutta(0, 1, 100, val, constants);
-
-    timer3D->start(100);
-}
-
-void MainWindow::timer3D_slot(){
-    result = MainWindow::rungeKutta(0, 1, 100, result, constants);
-
-    if (result[0] > l_max || result[0] < -l_max)
-        result[1] = 0;
-
-    float angle = MainWindow::to_degrees(result[2]) - 180;
-    QMatrix4x4 matrix;
-    matrix.rotate(angle, QVector3D(0.0f, 0.0f, 1.0f));
-    matrix.translate(QVector3D(0.0f, -2.5f, 0.0f)); // Позиционирование стержня относительно каретки
-
-    QMatrix4x4 matrix2;
-    matrix2.rotate(0, QVector3D(0.0f, 0.0f, 1.0f));
-    matrix2.translate(QVector3D(result[0] * 100 / 3, 0.0f, 0.0f)); // Позиционирование стержня относительно каретки
-
-    cartTransform->setMatrix(matrix2);
-    rodTransform->setMatrix(matrix);
 }
 
 void MainWindow::on_startButton_clicked(){
@@ -471,6 +366,18 @@ void MainWindow::timer_slot(){
     if (result[0] > l_max || result[0] < -l_max)
         result[1] = 0;
 
+    float angle = MainWindow::to_degrees(result[2]) - 180;
+    QMatrix4x4 matrix;
+    matrix.rotate(angle, QVector3D(0.0f, 0.0f, 1.0f));
+    matrix.translate(QVector3D(0.0f, -2.5f, 0.0f)); // Позиционирование стержня относительно каретки
+
+    QMatrix4x4 matrix2;
+    matrix2.rotate(0, QVector3D(0.0f, 0.0f, 1.0f));
+    matrix2.translate(QVector3D(result[0] * 100 / 3, 0.0f, 0.0f)); // Позиционирование стержня относительно каретки
+
+    cartTransform->setMatrix(matrix2);
+    rodTransform->setMatrix(matrix);
+
     plotTime.push_back(T);
     plotXY.push_back(result[0]);
     plotVxY.push_back(result[1]);
@@ -499,3 +406,4 @@ void MainWindow::timer_slot(){
     plot4->graph(0)->addData(plotTime, plotOmegaFiY);
     plot4->replot();
 }
+
