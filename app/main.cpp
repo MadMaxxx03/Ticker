@@ -39,6 +39,30 @@ void MainWindow::modifiIni(QString path, QVector<double> values) {
     sett.setValue("Modified/W", values[12]);
 }
 
+void MainWindow::writeToOutput(QString path, const QVector<double>& v1, const QVector<double>& v2, const QVector<double>& v3, const QVector<double>& v4, const QVector<double>& v5){
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qDebug() << "Cannot open file for writing: " << file.errorString();
+        return;
+    }
+
+    QTextStream out(&file);
+    int length = v1.size();
+
+    out << "Time   X   Vx   Fi   OmegaFiY\n";
+
+    for (int i = 0; i < length; ++i) {
+        out << v1[i] << "  "
+            << v2[i] << "  "
+            << v3[i] << "  "
+            << v4[i] << "  "
+            << v5[i] << "\n";
+    }
+
+    file.close();
+    qDebug() << "Data written to file successfully.";
+}
+
 //Функция суммирования векторов
 QVector<double> MainWindow::sum_vector(const QVector<double>& vec1, const QVector<double>& vec2) {
     QVector<double> result(vec1.size());

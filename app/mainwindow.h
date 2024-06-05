@@ -34,7 +34,8 @@
 #include <QMatrix4x4>
 #include <Qt3DRender/QDirectionalLight>
 #include <QDateTime>
-//#include "qcustomplot.h"
+#include <QFile>
+#include <QTextStream>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -51,6 +52,8 @@ public:
 private slots:
     void on_saveButton_clicked();
     void on_startButton_clicked();
+    void on_stopButton_clicked();
+    void on_writeButton_clicked();
     void timer_slot();
 
 public:
@@ -62,6 +65,7 @@ public:
     static QVector<double> mathModel(double t, const QVector<double>& model, const QVector<double>& constants);
     static QVector<double> mathModelObserver(double t, const QVector<double>& model, const QVector<double>& constants);
     static QVector<double> control(double dt, const QVector<double>& model, const QVector<double>& u);
+    static void writeToOutput(QString path, const QVector<double>& v1, const QVector<double>& v2, const QVector<double>& v3, const QVector<double>& v4, const QVector<double>& v5);
     static double to_degrees(double radians);
 
 private:
@@ -131,6 +135,8 @@ private:
 
     QPushButton *saveButton;
     QPushButton *startButton;
+    QPushButton *stopButton;
+    QPushButton *writeButton;
 
 };
 #endif // MAINWINDOW_H

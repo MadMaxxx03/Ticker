@@ -144,6 +144,18 @@ MainWindow::MainWindow(QWidget *parent)
     startButton->setFixedHeight(40);
     connect(startButton, &QPushButton::clicked, this, &MainWindow::on_startButton_clicked);
 
+    // Кнопка остановки моделирования
+    stopButton = new QPushButton("Остановка моделирования");
+    stopButton->setFont(labelFont);
+    stopButton->setFixedHeight(40);
+    connect(stopButton, &QPushButton::clicked, this, &MainWindow::on_stopButton_clicked);
+
+    // Кнопка сохранения значений в файл
+    writeButton = new QPushButton("Сохранение значений в файл");
+    writeButton->setFont(labelFont);
+    writeButton->setFixedHeight(40);
+    connect(writeButton, &QPushButton::clicked, this, &MainWindow::on_writeButton_clicked);
+
     QVBoxLayout *D3layout = new QVBoxLayout;
 
     // Создание окна для отображения 3D-графики
@@ -157,6 +169,8 @@ MainWindow::MainWindow(QWidget *parent)
     QHBoxLayout *buttonsLayout = new QHBoxLayout;
     buttonsLayout->addWidget(saveButton);
     buttonsLayout->addWidget(startButton);
+    buttonsLayout->addWidget(stopButton);
+    buttonsLayout->addWidget(writeButton);
     LELayout->addLayout(D3layout);
     initialValuesLayout->addLayout(LELayout);
     initialValuesLayout->addLayout(buttonsLayout);
@@ -285,7 +299,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     setCentralWidget(initialValuesWidget);
 
-
     secondWindow = new SecondWindow();
     //Получение указателей на графики из SecondWindow
     plot1 = secondWindow->getPlot1();
@@ -358,6 +371,15 @@ void MainWindow::on_startButton_clicked(){
     }
 
     timer->start(100);
+}
+
+void MainWindow::on_stopButton_clicked(){
+    timer->stop();
+}
+
+void MainWindow::on_writeButton_clicked(){
+    writeToOutput("C:/Users/baben_bakg1j1/Programming/C++/Ticker/app/output.txt",
+                  plotTime, plotXY, plotVxY, plotFiY, plotOmegaFiY);
 }
 
 void MainWindow::timer_slot(){
