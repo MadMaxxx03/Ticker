@@ -126,6 +126,22 @@ private:
 
     QList<QLineEdit*> fields;
 
+    QLabel * labelControl;
+    QLabel * labelControlType;
+    QLabel * labelControlParam1;
+    QLabel * labelControlParam2;
+
+    QLineEdit * editControlParam1;
+    QLineEdit * editControlParam2;
+
+    QLabel * labelObserver;
+    QLabel * labelObserverType;
+    QLabel * labelObserverParam1;
+    QLabel * labelObserverParam2;
+
+    QLineEdit * editObserverParam1;
+    QLineEdit * editObserverParam2;
+
     QCustomPlot *plot1;
     QCustomPlot *plot2;
     QCustomPlot *plot3;
@@ -137,6 +153,8 @@ private:
     QPushButton *startButton;
     QPushButton *stopButton;
     QPushButton *writeButton;
+
+    QString localPath;
 
 };
 #endif // MAINWINDOW_H

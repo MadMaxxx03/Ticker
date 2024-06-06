@@ -19,6 +19,8 @@ MainWindow::MainWindow(QWidget *parent)
     QFont axisFont("Arial", 25);
     penSize = 5;
 
+    localPath = "C:/Users/baben_bakg1j1/Programming/C++/Ticker/app";
+
     initialValuesWidget = new QWidget;
     QVBoxLayout *initialValuesLayout = new QVBoxLayout;
     QHBoxLayout *LELayout = new QHBoxLayout;
@@ -137,6 +139,129 @@ MainWindow::MainWindow(QWidget *parent)
     LELayout->addLayout(LEVLayout1);
     LELayout->addLayout(LEVLayout2);
 
+    QVBoxLayout *menuLayout = new QVBoxLayout;
+    QHBoxLayout *controlAndObserverНayout = new QHBoxLayout;
+
+    QHBoxLayout *controlНLayout = new QHBoxLayout;
+    QVBoxLayout *controlLVLayout = new QVBoxLayout;
+    QVBoxLayout *controlEVLayout = new QVBoxLayout;
+    QVBoxLayout *controLayout = new QVBoxLayout;
+
+    labelControl = new QLabel("Управление");
+    labelControl->setFont(axisFont);
+
+    labelControlType = new QLabel("Вид");
+    labelControlType->setFont(labelFont);
+    labelControlParam1 = new QLabel("Параметр 1");
+    labelControlParam1->setFont(labelFont);
+    labelControlParam2 = new QLabel("Параметр 2");
+    labelControlParam2->setFont(labelFont);
+
+    controlLVLayout->addWidget(labelControlType);
+    controlLVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    controlLVLayout->addWidget(labelControlParam1);
+    controlLVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    controlLVLayout->addWidget(labelControlParam2);
+
+    QMenuBar *controlMenuBar = new QMenuBar();
+    controlMenuBar->setFont(labelFont);
+    QMenu *controlMenu = new QMenu("Выбор управления");
+    controlMenu->setFont(labelFont);
+
+    QAction *controlMenuAction1 = new QAction("Управление 1");
+    QAction *controlMenuAction2 = new QAction("Управление 2");
+
+    controlMenu->addAction(controlMenuAction1);
+    controlMenu->addAction(controlMenuAction2);
+    controlMenuBar->addMenu(controlMenu);
+    controlMenuBar->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    editControlParam1 = new QLineEdit;
+    editControlParam1->setFont(labelFont);
+    editControlParam1->setMaximumWidth(120);
+    editControlParam1->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    editControlParam2 = new QLineEdit;
+    editControlParam2->setMaximumWidth(120);
+    editControlParam2->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    editControlParam2->setFont(labelFont);
+
+    controlEVLayout->addWidget(controlMenuBar);
+    controlEVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    controlEVLayout->addWidget(editControlParam1);
+    controlEVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    controlEVLayout->addWidget(editControlParam2);
+
+    controlНLayout->addLayout(controlLVLayout);
+    controlНLayout->addLayout(controlEVLayout);
+
+    controLayout->addWidget(labelControl);
+    controLayout->addLayout(controlНLayout);
+
+    QHBoxLayout *observerНLayout = new QHBoxLayout;
+    QVBoxLayout *observerLVLayout = new QVBoxLayout;
+    QVBoxLayout *observerEVLayout = new QVBoxLayout;
+    QVBoxLayout *observerLayout = new QVBoxLayout;
+
+    labelObserver = new QLabel("Наблюдатель");
+    labelObserver->setFont(axisFont);
+
+    labelObserverType = new QLabel("Вид");
+    labelObserverType->setFont(labelFont);
+    labelObserverParam1 = new QLabel("Параметр 1");
+    labelObserverParam1->setFont(labelFont);
+    labelObserverParam2 = new QLabel("Параметр 2");
+    labelObserverParam2->setFont(labelFont);
+
+    observerLVLayout->addWidget(labelObserverType);
+    observerLVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    observerLVLayout->addWidget(labelObserverParam1);
+    observerLVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    observerLVLayout->addWidget(labelObserverParam2);
+
+    QMenuBar *observerMenuBar = new QMenuBar();
+    observerMenuBar->setFont(labelFont);
+    QMenu *observerMenu = new QMenu("Выбор наблюдателя");
+    observerMenu->setFont(labelFont);
+
+    QAction *observerMenuAction1 = new QAction("Расширенный наблюдатель Калмана");
+    QAction *observerMenuAction2 = new QAction("Наблюдатель Калмана");
+    QAction *observerMenuAction3 = new QAction("Адаптивный наблюдатель");
+    QAction *observerMenuAction4 = new QAction("Нелинейный наблюдатель");
+
+    observerMenu->addAction(observerMenuAction1);
+    observerMenu->addAction(observerMenuAction2);
+    observerMenu->addAction(observerMenuAction3);
+    observerMenu->addAction(observerMenuAction4);
+    observerMenuBar->addMenu(observerMenu);
+    observerMenuBar->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    editObserverParam1 = new QLineEdit;
+    editObserverParam1->setFont(labelFont);
+    editObserverParam1->setMaximumWidth(120);
+    editObserverParam1->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    editObserverParam2 = new QLineEdit;
+    editObserverParam2->setMaximumWidth(120);
+    editObserverParam2->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    editObserverParam2->setFont(labelFont);
+
+    observerEVLayout->addWidget(observerMenuBar);
+    observerEVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    observerEVLayout->addWidget(editObserverParam1);
+    observerEVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    observerEVLayout->addWidget(editObserverParam2);
+
+    observerНLayout->addLayout(observerLVLayout);
+    observerНLayout->addLayout(observerEVLayout);
+
+    observerLayout->addWidget(labelObserver);
+    observerLayout->addLayout(observerНLayout);
+
+    controlAndObserverНayout->addLayout(controLayout);
+    controlAndObserverНayout->addLayout(observerLayout);
+
+    menuLayout->addLayout(LELayout);
+    menuLayout->addSpacing(25);
+    menuLayout->addLayout(controlAndObserverНayout);
 
     // Кнопка запуска
     startButton = new QPushButton("Запуск");
@@ -165,14 +290,17 @@ MainWindow::MainWindow(QWidget *parent)
     container->setMinimumSize(QSize(500, 500));
     container->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
+    QHBoxLayout *mainLayout = new QHBoxLayout;
+
     D3layout->addWidget(container);
     QHBoxLayout *buttonsLayout = new QHBoxLayout;
     buttonsLayout->addWidget(saveButton);
     buttonsLayout->addWidget(startButton);
     buttonsLayout->addWidget(stopButton);
     buttonsLayout->addWidget(writeButton);
-    LELayout->addLayout(D3layout);
-    initialValuesLayout->addLayout(LELayout);
+    mainLayout->addLayout(menuLayout);
+    mainLayout->addLayout(D3layout);
+    initialValuesLayout->addLayout(mainLayout);
     initialValuesLayout->addLayout(buttonsLayout);
     initialValuesWidget->setLayout(initialValuesLayout);
 
@@ -275,7 +403,7 @@ MainWindow::MainWindow(QWidget *parent)
     Qt3DCore::QEntity *lightEntity = new Qt3DCore::QEntity(rootEntity);
     Qt3DRender::QDirectionalLight *light = new Qt3DRender::QDirectionalLight(lightEntity);
     light->setColor("white");
-    light->setIntensity(1.0f);
+    light->setIntensity(3.0f);
     lightEntity->addComponent(light);
 
     Qt3DCore::QTransform *lightTransform = new Qt3DCore::QTransform();
@@ -286,15 +414,14 @@ MainWindow::MainWindow(QWidget *parent)
     // Установка корневой сущности
     view->setRootEntity(rootEntity);
 
-    //cartAnimation = new QPropertyAnimation(cartTransform, "translation");
     cartTransform = new Qt3DCore::QTransform();
     cartTransform->setTranslation(QVector3D(0.0f, 0.0f, 0.0f));
     cartEntity->addComponent(cartTransform);
 
-    QVector<double> values = MainWindow::readIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/app/values.ini", "Base");
+    QVector<double> values = MainWindow::readIni(localPath + "/values.ini", "Base");
     for (int i = 0; i < fields.size(); i++) {
             fields[i]->setText(QString::number(values[i]));
-            fields[i]->setFont(QFont ("Times", 20));
+            fields[i]->setFont(labelFont);
     }
 
     setCentralWidget(initialValuesWidget);
@@ -346,15 +473,15 @@ void MainWindow::on_saveButton_clicked(){
     }
 
     if (isAllOk)
-        modifiIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/app/values.ini", newValues);
+        modifiIni(localPath + "/values.ini", newValues);
 }
 
 void MainWindow::on_startButton_clicked(){
     if (isFirstReadFlag){
-        modifiIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/app/values.ini", values);
+        modifiIni(localPath + "/values.ini", values);
         isFirstReadFlag = false;
     }
-    values = MainWindow::readIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/app/values.ini", "Modified");
+    values = MainWindow::readIni(localPath + "/values.ini", "Modified");
     constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
     val = {values[9], values[10], values[11], values[12]};
     result = MainWindow::rungeKutta(0, 1, 100, val, constants);
@@ -378,7 +505,7 @@ void MainWindow::on_stopButton_clicked(){
 }
 
 void MainWindow::on_writeButton_clicked(){
-    writeToOutput("C:/Users/baben_bakg1j1/Programming/C++/Ticker/app/output.txt",
+    writeToOutput(localPath + "/output.txt",
                   plotTime, plotXY, plotVxY, plotFiY, plotOmegaFiY);
 }
 
