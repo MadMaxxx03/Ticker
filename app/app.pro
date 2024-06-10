@@ -31,3 +31,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 DISTFILES += \
     output.txt \
     values.ini
+
+INCLUDEPATH += "C:\Qt\eigen-3.4.0"

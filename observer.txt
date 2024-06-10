@@ -1,0 +1,39 @@
+x = otvet(:,1);
+    M = [1, 0 ,0, 0; ...
+        0, 1, 0, -((m2+(sys.m3)/2)*cos(x(3))*sys.l)/(sys.m1 + sys.m2 + sys.m3);...
+        0, 0, 1, 0;...
+        0, -((sys.m2+(sys.m3)/2)*cos(x(3))*sys.l)/((sys.m2+(sys.m3)/4)*(sys.l)^2), 0, 1];
+    A = [0, 1, 0, 0; ...
+        0, 0, 0, 0; ...
+        0, 0, 0, 1; ...
+        0, 0, ((sys.m2+(sys.m3)/2)*sys.g*cos(x(3))-sys.b2)/((sys.m2+(sys.m3)/4)*(sys.l)), -sys.k2/((sys.m2+(sys.m3)/4)*(sys.l)^2)];
+    B = [0; 1/(sys.m1 + sys.m2 + sys.m3); 0; 0];
+    A = (M^(-1))*A;
+    B = (M^(-1))*B;
+    C = [1,1,1,1];
+    sys.H = [0, 0, 0, 1]*(([C', A'*C', (A'^2)*C', (A'^3)*C'])^(-1))*(A'^4 + 2.6*8*(A'^3) + 3.4*64*(A'^2)+2.6*512*A' + 4096*eye(4));
+    x_n = zeros(4,length(t));
+    x_n(:,1)=y0;
+for i=1:length(t)
+    x_n(:,i+1) = ode4(N, t0+(i-1)*h, h, t0+i*h, otvet(:,i),sys,x_n(:,i)); 
+    sys.F_upr = 0;
+    U(i) = sys.F_upr;
+    Y = ode4(F1_PS, t0+(i-1)*h, h, t0+i*h, otvet(:,i),sys,0);
+    otvet(:,i+1) = Y;
+end
+
+function dx = dz_01_PS_func(t,x,sys,x_n)
+    dx = zeros(4,1);
+    M = [1, 0 ,0, 0; ...
+        0, 1, 0, -((sys.m2+(sys.m3)/2)*cos(x(3))*sys.l)/(sys.m1 + sys.m2 + sys.m3);...
+        0, 0, 1, 0;...
+        0, -((sys.m2+(sys.m3)/2)*cos(x(3))*sys.l)/((sys.m2+(sys.m3)/4)*(sys.l)^2), 0, 1];
+    A = [0, 1, 0, 0; ...
+        0, 0, -((sys.m2+(sys.m3)/2)*x(4)*x(4)*sys.l*cos(x(3)))/(sys.m1 + sys.m2 + sys.m3), -(2*(sys.m2+(sys.m3)/2)*x(4)*sys.l*sin(x(3)))/(sys.m1 + sys.m2 + sys.m3); ...
+        0, 0, 0, 1; ...
+        0, 0, ((sys.m2+(sys.m3)/2)*sys.g*cos(x(3))-sys.b2)/((sys.m2+(sys.m3)/4)*(sys.l)), -sys.k2/((sys.m2+(sys.m3)/4)*(sys.l)^2)];
+    B = [0; 1/(sys.m1 + sys.m2 + sys.m3); 0; 0];
+    A = (M^(-1))*A;
+    B = (M^(-1))*B;
+    dx = A*[x(1); x(2); x(3); x(4)] + B*sys.F_upr;
+end

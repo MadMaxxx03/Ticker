@@ -15,23 +15,20 @@ MainWindow::MainWindow(QWidget *parent)
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(timer_slot()));
 
-    QFont labelFont("Times", 20);
-    QFont axisFont("Arial", 25);
+    QFont labelFont("Times", 15);
+    QFont axisFont("Arial", 20);
     penSize = 5;
 
     localPath = "C:/Users/baben_bakg1j1/Programming/C++/Ticker/app";
 
     initialValuesWidget = new QWidget;
     QVBoxLayout *initialValuesLayout = new QVBoxLayout;
-    QHBoxLayout *LELayout = new QHBoxLayout;
+    QVBoxLayout *menuLayout = new QVBoxLayout;
 
     QHBoxLayout *LEHLayout1 = new QHBoxLayout;
     QVBoxLayout *LEVLayout1 = new QVBoxLayout;
     QVBoxLayout *labelsLayout1 = new QVBoxLayout;
     QVBoxLayout *editsLayout1 = new QVBoxLayout;
-
-    labeModelParams = new QLabel("Параметры модели");
-    labeModelParams->setFont(axisFont);
 
     labelm1 = new QLabel("Масса тележки");
     labelm2 = new QLabel("Масса на конце стержня");
@@ -59,13 +56,10 @@ MainWindow::MainWindow(QWidget *parent)
     QVBoxLayout *labelsLayout2 = new QVBoxLayout;
     QVBoxLayout *editsLayout2 = new QVBoxLayout;
 
-    labeInitVal = new QLabel("Начальные условия");
-    labeInitVal->setFont(axisFont);
-
     labelX = new QLabel("Координата");
     labelV = new QLabel("Скорость");
     labelFi = new QLabel("Угол");
-    labelW = new QLabel("Угл скорость");
+    labelW = new QLabel("Угловая скорость");
 
     editX = new QLineEdit;
     editV = new QLineEdit;
@@ -126,29 +120,19 @@ MainWindow::MainWindow(QWidget *parent)
 
     LEHLayout1->addLayout(labelsLayout1);
     LEHLayout1->addLayout(editsLayout1);
-    LEVLayout1->addWidget(labeModelParams);
     LEVLayout1->addSpacing(10);
     LEVLayout1->addLayout(LEHLayout1);
 
     LEHLayout2->addLayout(labelsLayout2);
     LEHLayout2->addLayout(editsLayout2);
-    LEVLayout2->addWidget(labeInitVal);
     LEVLayout2->addSpacing(10);
     LEVLayout2->addLayout(LEHLayout2);
-
-    LELayout->addLayout(LEVLayout1);
-    LELayout->addLayout(LEVLayout2);
-
-    QVBoxLayout *menuLayout = new QVBoxLayout;
-    QHBoxLayout *controlAndObserverНayout = new QHBoxLayout;
 
     QHBoxLayout *controlНLayout = new QHBoxLayout;
     QVBoxLayout *controlLVLayout = new QVBoxLayout;
     QVBoxLayout *controlEVLayout = new QVBoxLayout;
+    QHBoxLayout *controlMenuLayout = new QHBoxLayout;
     QVBoxLayout *controLayout = new QVBoxLayout;
-
-    labelControl = new QLabel("Управление");
-    labelControl->setFont(axisFont);
 
     labelControlType = new QLabel("Вид");
     labelControlType->setFont(labelFont);
@@ -157,24 +141,22 @@ MainWindow::MainWindow(QWidget *parent)
     labelControlParam2 = new QLabel("Параметр 2");
     labelControlParam2->setFont(labelFont);
 
-    controlLVLayout->addWidget(labelControlType);
-    controlLVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    controlMenuLayout->addWidget(labelControlType);
+
     controlLVLayout->addWidget(labelControlParam1);
     controlLVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     controlLVLayout->addWidget(labelControlParam2);
 
-    QMenuBar *controlMenuBar = new QMenuBar();
-    controlMenuBar->setFont(labelFont);
-    QMenu *controlMenu = new QMenu("Выбор управления");
-    controlMenu->setFont(labelFont);
+    QComboBox *controlComboBox = new QComboBox();
+    controlComboBox->setFont(labelFont);  // Устанавливаем шрифт
+    controlComboBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    controlComboBox->setMaximumWidth(300); // Максимальная ширина в пикселях
 
-    QAction *controlMenuAction1 = new QAction("Управление 1");
-    QAction *controlMenuAction2 = new QAction("Управление 2");
-
-    controlMenu->addAction(controlMenuAction1);
-    controlMenu->addAction(controlMenuAction2);
-    controlMenuBar->addMenu(controlMenu);
-    controlMenuBar->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    // Добавление элементов в QListWidget
+    controlComboBox->addItem("Sliding-mode");
+    controlComboBox->addItem("Back stepping");
+    controlComboBox->addItem("Адаптивное управление");
+    controlComboBox->addItem("Model Predictive Control");
 
     editControlParam1 = new QLineEdit;
     editControlParam1->setFont(labelFont);
@@ -185,8 +167,9 @@ MainWindow::MainWindow(QWidget *parent)
     editControlParam2->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     editControlParam2->setFont(labelFont);
 
-    controlEVLayout->addWidget(controlMenuBar);
-    controlEVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    controlMenuLayout->addWidget(controlComboBox);
+    controlMenuLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+
     controlEVLayout->addWidget(editControlParam1);
     controlEVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     controlEVLayout->addWidget(editControlParam2);
@@ -194,16 +177,14 @@ MainWindow::MainWindow(QWidget *parent)
     controlНLayout->addLayout(controlLVLayout);
     controlНLayout->addLayout(controlEVLayout);
 
-    controLayout->addWidget(labelControl);
+    controLayout->addLayout(controlMenuLayout);
     controLayout->addLayout(controlНLayout);
 
     QHBoxLayout *observerНLayout = new QHBoxLayout;
     QVBoxLayout *observerLVLayout = new QVBoxLayout;
     QVBoxLayout *observerEVLayout = new QVBoxLayout;
+    QHBoxLayout *observerMenuLayout = new QHBoxLayout;
     QVBoxLayout *observerLayout = new QVBoxLayout;
-
-    labelObserver = new QLabel("Наблюдатель");
-    labelObserver->setFont(axisFont);
 
     labelObserverType = new QLabel("Вид");
     labelObserverType->setFont(labelFont);
@@ -212,28 +193,23 @@ MainWindow::MainWindow(QWidget *parent)
     labelObserverParam2 = new QLabel("Параметр 2");
     labelObserverParam2->setFont(labelFont);
 
-    observerLVLayout->addWidget(labelObserverType);
-    observerLVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    observerMenuLayout->addWidget(labelObserverType);
+
     observerLVLayout->addWidget(labelObserverParam1);
     observerLVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     observerLVLayout->addWidget(labelObserverParam2);
 
-    QMenuBar *observerMenuBar = new QMenuBar();
-    observerMenuBar->setFont(labelFont);
-    QMenu *observerMenu = new QMenu("Выбор наблюдателя");
-    observerMenu->setFont(labelFont);
+    observerComboBox = new QComboBox();
+    observerComboBox->setFont(labelFont);  // Устанавливаем шрифт
+    observerComboBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    observerComboBox->setMaximumWidth(300); // Максимальная ширина в пикселях
 
-    QAction *observerMenuAction1 = new QAction("Расширенный наблюдатель Калмана");
-    QAction *observerMenuAction2 = new QAction("Наблюдатель Калмана");
-    QAction *observerMenuAction3 = new QAction("Адаптивный наблюдатель");
-    QAction *observerMenuAction4 = new QAction("Нелинейный наблюдатель");
-
-    observerMenu->addAction(observerMenuAction1);
-    observerMenu->addAction(observerMenuAction2);
-    observerMenu->addAction(observerMenuAction3);
-    observerMenu->addAction(observerMenuAction4);
-    observerMenuBar->addMenu(observerMenu);
-    observerMenuBar->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    // Добавление элементов в QListWidget
+    observerComboBox->addItem("Без наблюдателя");
+    observerComboBox->addItem("Наблюдатель с большим коэффициентом усиления");
+    observerComboBox->addItem("Наблюдатель Калмана");
+    observerComboBox->addItem("Адаптивный наблюдатель");
+    observerComboBox->addItem("Нелинейный наблюдатель");
 
     editObserverParam1 = new QLineEdit;
     editObserverParam1->setFont(labelFont);
@@ -244,24 +220,31 @@ MainWindow::MainWindow(QWidget *parent)
     editObserverParam2->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     editObserverParam2->setFont(labelFont);
 
-    observerEVLayout->addWidget(observerMenuBar);
-    observerEVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    observerMenuLayout->addWidget(observerComboBox);
+    observerMenuLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+
     observerEVLayout->addWidget(editObserverParam1);
     observerEVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     observerEVLayout->addWidget(editObserverParam2);
 
     observerНLayout->addLayout(observerLVLayout);
     observerНLayout->addLayout(observerEVLayout);
-
-    observerLayout->addWidget(labelObserver);
+    observerLayout->addLayout(observerMenuLayout);
     observerLayout->addLayout(observerНLayout);
 
-    controlAndObserverНayout->addLayout(controLayout);
-    controlAndObserverНayout->addLayout(observerLayout);
+    QGroupBox *modelParamsGroup = new QGroupBox("Параметры модели");
+    modelParamsGroup->setLayout(LEVLayout1);
+    QGroupBox *initValGroup = new QGroupBox("Начальные условия");
+    initValGroup->setLayout(LEVLayout2);
+    QGroupBox *controlGroup = new QGroupBox("Управление");
+    controlGroup->setLayout(controLayout);
+    QGroupBox *observerGroup = new QGroupBox("Наблюдатель");
+    observerGroup->setLayout(observerLayout);
 
-    menuLayout->addLayout(LELayout);
-    menuLayout->addSpacing(25);
-    menuLayout->addLayout(controlAndObserverНayout);
+    menuLayout->addWidget(modelParamsGroup);
+    menuLayout->addWidget(initValGroup);
+    menuLayout->addWidget(controlGroup);
+    menuLayout->addWidget(observerGroup);
 
     // Кнопка запуска
     startButton = new QPushButton("Запуск");
@@ -403,7 +386,7 @@ MainWindow::MainWindow(QWidget *parent)
     Qt3DCore::QEntity *lightEntity = new Qt3DCore::QEntity(rootEntity);
     Qt3DRender::QDirectionalLight *light = new Qt3DRender::QDirectionalLight(lightEntity);
     light->setColor("white");
-    light->setIntensity(3.0f);
+    light->setIntensity(1.0f);
     lightEntity->addComponent(light);
 
     Qt3DCore::QTransform *lightTransform = new Qt3DCore::QTransform();
@@ -436,6 +419,7 @@ MainWindow::MainWindow(QWidget *parent)
     secondWindow->setWindowTitle("2D моделирование");
     secondWindow->resize(800, 600);
     secondWindow->show();
+
 }
 
 MainWindow::~MainWindow()
@@ -450,7 +434,46 @@ QVector<double> values = MainWindow::readIni("C:/Users/baben_bakg1j1/Programming
 QVector<double> constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
 QVector<double> val = {values[9], values[10], values[11], values[12]};
 
+QVector<double> y_obs = {0.0, 0.0, M_PI / 6, 0.0};
+
+const double m1 = constants[0];
+const double m2 = constants[1];
+const double m3 = constants[2];
+const double l = constants[3];
+const double Ff = constants[4];
+const double Fr = constants[5];
+const double Fc = constants[6];
+const double b2 = constants[7];
+const double k2 = constants[8];
+
+/*
+Eigen::Vector4d y_0(0.0, 0.0, M_PI / 6, 0.0);
+
+Eigen::MatrixXd A({
+    {0, 1, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, ((values[1]+(values[2])/2)*9.81*cos(y_0[2])-values[7])/((values[1]+(values[2])/4)*(values[3])), -values[8]/((values[1]+(values[2])/4)*values[3]*values[3])}
+});
+
+Eigen::Vector4d C(1, 1, 1, 1);
+
+Eigen::MatrixXd invA = (C * A.transpose() * C.transpose()).inverse();
+Eigen::MatrixXd invC = C.inverse();
+Eigen::MatrixXd H = (A.transpose().pow(4) + 2.6*8*(A.transpose().pow(3)) + 3.4*64*(A.transpose().pow(2)) + 2.6*512*A.transpose() + 4096*Eigen::MatrixXd::Identity(4,4)) * invA * invC;
+
+Eigen::Vector4d y_0(0.0, 0.0, M_PI / 6, 0.0);
+
+Eigen::Matrix4d obs({
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, M_PI/6, 0}
+});
+*/
+
 QVector<double> result = MainWindow::rungeKutta(0, 1, 100, val, constants);
+QVector<double> resultObs = MainWindow::rungeKuttaObserver(0, 1, 100, y_obs, constants);
 
 void MainWindow::on_saveButton_clicked(){
     QString inputText;
@@ -474,6 +497,13 @@ void MainWindow::on_saveButton_clicked(){
 
     if (isAllOk)
         modifiIni(localPath + "/values.ini", newValues);
+
+    QString selectedItem = observerComboBox->currentText();
+    if (selectedItem == "Без наблюдателя") {
+        observerFlag = false;
+    } else if (selectedItem == "Наблюдатель с большим коэффициентом усиления") {
+        observerFlag = true;
+    }
 }
 
 void MainWindow::on_startButton_clicked(){
@@ -485,6 +515,10 @@ void MainWindow::on_startButton_clicked(){
     constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
     val = {values[9], values[10], values[11], values[12]};
     result = MainWindow::rungeKutta(0, 1, 100, val, constants);
+    if (!observerFlag){
+        y_obs = {0.0, 0.0, M_PI / 6, 0.0};
+        resultObs = MainWindow::rungeKuttaObserver(0, 1, 100, y_obs, constants);
+    }
 
     T = beginT;
     plotTime.clear();
@@ -492,6 +526,10 @@ void MainWindow::on_startButton_clicked(){
     plotVxY.clear();
     plotFiY.clear();
     plotOmegaFiY.clear();
+    plotObsXY.clear();
+    plotObsVxY.clear();
+    plotObsFiY.clear();
+    plotObsOmegaFiY.clear();
 
     for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
         plot->clearGraphs();
@@ -511,6 +549,14 @@ void MainWindow::on_writeButton_clicked(){
 
 void MainWindow::timer_slot(){
     result = MainWindow::rungeKutta(0, 1, 100, result, constants);
+    if (observerFlag){
+        resultObs = MainWindow::rungeKuttaObserver(0, 1, 100, y_obs, constants);
+        plotObsXY.push_back(resultObs[0]);
+        plotObsVxY.push_back(resultObs[1]);
+        plotObsFiY.push_back(resultObs[2]);
+        plotObsOmegaFiY.push_back(resultObs[3]);
+        y_obs = resultObs;
+    }
 
     if (result[0] > l_max || result[0] < -l_max)
         result[1] = 0;
@@ -536,23 +582,35 @@ void MainWindow::timer_slot(){
     T += stepT;
 
     plot1->addGraph();
-    plot1->graph()->setPen(QPen(QColor(0, 0, 255), penSize));
+    plot1->addGraph();
+    plot1->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
     plot1->graph(0)->addData(plotTime, plotXY);
+    plot1->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
+    plot1->graph(1)->addData(plotTime, plotObsXY);
     plot1->replot();
 
     plot2->addGraph();
-    plot2->graph()->setPen(QPen(QColor(0, 0, 255), penSize));
+    plot2->addGraph();
+    plot2->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
     plot2->graph(0)->addData(plotTime, plotVxY);
+    plot2->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
+    plot2->graph(1)->addData(plotTime, plotObsVxY);
     plot2->replot();
 
     plot3->addGraph();
-    plot3->graph()->setPen(QPen(QColor(0, 0, 255), penSize));
+    plot3->addGraph();
+    plot3->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
     plot3->graph(0)->addData(plotTime, plotFiY);
+    plot3->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
+    plot3->graph(1)->addData(plotTime, plotObsFiY);
     plot3->replot();
 
     plot4->addGraph();
-    plot4->graph()->setPen(QPen(QColor(0, 0, 255), penSize));
+    plot4->addGraph();
+    plot4->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
     plot4->graph(0)->addData(plotTime, plotOmegaFiY);
+    plot4->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
+    plot4->graph(1)->addData(plotTime, plotObsOmegaFiY);
     plot4->replot();
 }
 

@@ -1,0 +1,113 @@
+#include <Eigen/Dense>
+#include <vector>
+
+struct sys_params {
+    double m1;
+    double m2;
+    double m3;
+    double l;
+    double b2;
+    double k2;
+    double F_sopr;
+    double F_tr;
+    double g;
+    double l_max;
+    double l_min;
+    double F_upr;
+    double alpha;
+    Eigen::RowVectorXd H;
+};
+
+Eigen::VectorXd PS_func(double t, Eigen::VectorXd x, sys_params sys, Eigen::VectorXd x_n) {
+    Eigen::MatrixXd M(4, 4);
+    M << 1, 0, 0, 0,
+         0, 1, 0, -((sys.m2+(sys.m3)/2)*cos(x(3))*sys.l)/(sys.m1 + sys.m2 + sys.m3)),
+         0, 0, 1, 0,
+         0, -((sys.m2+(sys.m3)/2)*cos(x(3))*sys.l)/((sys.m2+(sys.m3)/4)*(sys.l)*sys.l)), 0, 1;
+
+    Eigen::MatrixXd A(4, 4);
+    A << 0, 1, 0, 0,
+         0, 0, -((sys.m2+(sys.m3)/2)*x(4)*x(4)*sys.l*cos(x(3)))/(sys.m1 + sys.m2 + sys.m3)), -(2*(sys.m2+(sys.m3)/2)*x(4)*sys.l*sin(x(3)))/(sys.m1 + sys.m2 + sys.m3),
+         0, 0, 0, 1,
+         0, 0, ((sys.m2+(sys.m3)/2)*sys.g*cos(x(3))-sys.b2)/((sys.m2+(sys.m3)/4)*(sys.l)), -sys.k2/((sys.m2+(sys.m3)/4)*(sys.l)*sys.l);
+
+    Eigen::MatrixXd B(4, 1);
+    B << 0,
+         1/(sys.m1 + sys.m2 + sys.m3),
+         0,
+         0;
+
+    A = M.inverse() * A;
+    B = M.inverse() * B;
+
+    return A * x.head(4) + B * sys.F_upr;
+}
+
+std::vector<double> ode4(std::function<Eigen::VectorXd(double, Eigen::VectorXd, sys_params, Eigen::VectorXd)> F,
+                           double t0, double h, double tfinal, Eigen::VectorXd y0, sys_params sys, Eigen::VectorXd x_n) {
+    
+    return {};
+}
+
+int main() {
+    sys_params sys;
+    sys.m1 = 0.5;
+    sys.m2 = 0.15;
+    sys.m3 = 0.05;
+    sys.l = 0.15;
+    sys.b2 = 0.01;
+    sys.k2 = 0.0;
+    sys.F_sopr = 0;
+    sys.F_tr = 0.0;
+    sys.g = 9.81;
+    sys.l_max = 0.3;
+    sys.l_min = -0.3;
+    sys.F_upr = 0;
+    sys.alpha = 0;
+
+    int flag = 0;
+    std::vector<double> t;
+    for (double i = 0; i <= 10; i += 0.01) {
+        t.push_back(i);
+    }
+
+    double t0 = 0;
+    double t_end = 10;
+    double h = 0.01;
+
+    Eigen::VectorXd y0(4);
+    y0 << 0,
+           0,
+           M_PI / 6,
+           0.0;
+
+    Eigen::MatrixXd otvet(4, t.size());
+    otvet.col(0) = y0;
+
+    std::vector<double> U;
+    U.push_back(0);
+
+    Eigen::MatrixXd x_n(4, t.size());
+    x_n.col(0) = y0;
+
+
+    Eigen::VectorXd C(4);
+    C << 1,
+           1,
+           1,
+           1;
+    Eigen::MatrixXd A(4, 4);
+    
+    Eigen::MatrixXd invA = (C * A.transpose() * C.transpose()).inverse();
+    Eigen::MatrixXd invC = C.inverse();
+    sys.H = (A.transpose().pow(4) + 2.6*8*(A.transpose().pow(3)) + 3.4*64*(A.transpose().pow(2)) + 2.6*512*A.transpose() + 4096*Eigen::MatrixXd::Identity(4,4)) * invA * invC;
+
+    for (int i = 1; i < t.size(); i++) {
+        x_n.col(i) = ode4(PS_func, t0 + (i - 1) * h, h, t0 + i * h, otvet.col(i - 1), sys, x_n.col(i - 1));
+        sys.F_upr = 0;
+        U.push_back(sys.F_upr);
+        otvet.col(i) = ode4(F1_PS, t0 + (i - 1) * h, h, t0 + i * h, otvet.col(i - 1), sys, 0);
+    }
+
+    return 0;
+}
