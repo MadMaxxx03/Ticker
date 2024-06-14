@@ -427,6 +427,30 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+Eigen::MatrixXd matrixPower(const Eigen::MatrixXd& mat, int power) {
+    if (power == 0) {
+        return Eigen::MatrixXd::Identity(mat.rows(), mat.cols());
+    } else if (power == 1) {
+        return mat;
+    } else {
+        Eigen::MatrixXd temp = matrixPower(mat, power / 2);
+        if (power % 2 == 0) {
+            return temp * temp;
+        } else {
+            return temp * temp * mat;
+        }
+    }
+}
+
+Eigen::MatrixXd createColsMatrix(const Eigen::MatrixXd& A, const Eigen::Vector4d& C) {
+    Eigen::MatrixXd cols(4, 4);
+    cols.col(0) = C;
+    cols.col(1) = A.transpose() * C;
+    cols.col(2) = matrixPower(A.transpose(), 2) * C;
+    cols.col(3) = matrixPower(A.transpose(), 3) * C;
+    return cols;
+}
+
 const double l_max = 0.3;
 bool isFirstReadFlag = true;
 
@@ -446,34 +470,63 @@ const double Fc = constants[6];
 const double b2 = constants[7];
 const double k2 = constants[8];
 
-/*
+
 Eigen::Vector4d y_0(0.0, 0.0, M_PI / 6, 0.0);
 
-Eigen::MatrixXd A({
+Eigen::MatrixXd A_0({
     {0, 1, 0, 0},
     {0, 0, 0, 0},
     {0, 0, 0, 0},
     {0, 0, ((values[1]+(values[2])/2)*9.81*cos(y_0[2])-values[7])/((values[1]+(values[2])/4)*(values[3])), -values[8]/((values[1]+(values[2])/4)*values[3]*values[3])}
 });
 
+Eigen::MatrixXd M({
+    {1, 0, 0, 0},
+    {0, 1, 0, -((m2+(m3)/2)*cos(y_0[2])*l)/(m1+m2+m3)},
+    {0, 0, 1, 0},
+    {0, -((m2+(m3)/2)*cos(y_0[2])*l)/((m2+(m3)/4)*l*l), 0, 1}
+});
+
+Eigen::MatrixXd A = M.inverse() * A_0;
+
+// Создание вектора C
 Eigen::Vector4d C(1, 1, 1, 1);
 
-Eigen::MatrixXd invA = (C * A.transpose() * C.transpose()).inverse();
-Eigen::MatrixXd invC = C.inverse();
-Eigen::MatrixXd H = (A.transpose().pow(4) + 2.6*8*(A.transpose().pow(3)) + 3.4*64*(A.transpose().pow(2)) + 2.6*512*A.transpose() + 4096*Eigen::MatrixXd::Identity(4,4)) * invA * invC;
+// Добавляем создание вектора vec
+Eigen::Vector4d vec(0, 0, 0, 1);
 
-Eigen::Vector4d y_0(0.0, 0.0, M_PI / 6, 0.0);
+// Создание матрицы из столбцов [C', A'*C', (A'^2)*C', (A'^3)*C']
+Eigen::MatrixXd cols = createColsMatrix(A, C.transpose());
 
-Eigen::Matrix4d obs({
-    {0, 0, 0, 0},
-    {0, 0, 0, 0},
-    {0, 0, 0, 0},
-    {0, 0, M_PI/6, 0}
-});
+// Инверсия полученной матрицы
+Eigen::MatrixXd invCols = cols.inverse();
+
+// Вычисление матрицы term
+Eigen::MatrixXd A_t = A.transpose();
+Eigen::MatrixXd A_pow4 = matrixPower(A_t, 4);
+Eigen::MatrixXd A_pow3 = matrixPower(A_t, 3);
+Eigen::MatrixXd A_pow2 = matrixPower(A_t, 2);
+
+Eigen::MatrixXd term = A_pow4 + 2.6 * 8 * A_pow3 + 3.4 * 64 * A_pow2 + 2.6 * 512 * A_t + 4096 * Eigen::MatrixXd::Identity(4, 4);
+
+// Вычисление итоговой матрицы H
+Eigen::MatrixXd H = vec.transpose() * invCols * term;
+
+/*
+Eigen::MatrixXd C = Eigen::MatrixXd::Identity(4, 4);
+
+Eigen::MatrixXd invA = (A.transpose()).inverse(); // Инверсия транспонированной матрицы A
+Eigen::MatrixXd invC = C.inverse(); // Инверсия единичной матрицы, которая просто даст единичную матрицу
+
+Eigen::MatrixXd A_pow4 = matrixPower(A.transpose(), 4);
+Eigen::MatrixXd A_pow3 = matrixPower(A.transpose(), 3);
+Eigen::MatrixXd A_pow2 = matrixPower(A.transpose(), 2);
+
+Eigen::MatrixXd H = (A_pow4 + 2.6*8*A_pow3 + 3.4*64*A_pow2 + 2.6*512*A.transpose() + 4096*Eigen::MatrixXd::Identity(4, 4)) * invA * invC;
 */
 
 QVector<double> result = MainWindow::rungeKutta(0, 1, 100, val, constants);
-QVector<double> resultObs = MainWindow::rungeKuttaObserver(0, 1, 100, y_obs, constants);
+QVector<double> resultObs = MainWindow::rungeKuttaObserver(0, 1, 100, y_obs, constants, H);
 
 void MainWindow::on_saveButton_clicked(){
     QString inputText;
@@ -517,7 +570,7 @@ void MainWindow::on_startButton_clicked(){
     result = MainWindow::rungeKutta(0, 1, 100, val, constants);
     if (!observerFlag){
         y_obs = {0.0, 0.0, M_PI / 6, 0.0};
-        resultObs = MainWindow::rungeKuttaObserver(0, 1, 100, y_obs, constants);
+        resultObs = MainWindow::rungeKuttaObserver(0, 1, 100, y_obs, constants, H);
     }
 
     T = beginT;
@@ -550,7 +603,7 @@ void MainWindow::on_writeButton_clicked(){
 void MainWindow::timer_slot(){
     result = MainWindow::rungeKutta(0, 1, 100, result, constants);
     if (observerFlag){
-        resultObs = MainWindow::rungeKuttaObserver(0, 1, 100, y_obs, constants);
+        resultObs = MainWindow::rungeKuttaObserver(0, 1, 100, y_obs, constants, H);
         plotObsXY.push_back(resultObs[0]);
         plotObsVxY.push_back(resultObs[1]);
         plotObsFiY.push_back(resultObs[2]);
