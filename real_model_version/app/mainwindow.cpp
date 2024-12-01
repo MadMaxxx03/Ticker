@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     QFont axisFont("Arial", 20);
     penSize = 5;
 
-    localPath = "C:/Users/baben_bakg1j1/Programming/C++/Ticker/app";
+    localPath = "C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app";
 
     initialValuesWidget = new QWidget;
     QVBoxLayout *initialValuesLayout = new QVBoxLayout;
@@ -416,6 +416,19 @@ MainWindow::MainWindow(QWidget *parent)
     plot3 = secondWindow->getPlot3();
     plot4 = secondWindow->getPlot4();
 
+    plotTSize = 10;
+    std::pair<int, int>* plotSizes[] = {&plotXSize, &plotVxSize, &plotFiSize, &plotOmegaFiSize};
+
+    for (auto* plotSize : plotSizes) {
+        plotSize->first = -1;
+        plotSize->second = 1;
+    }
+
+    for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
+        plot->xAxis->setRange(-1, plotTSize);
+        plot->yAxis->setRange(-1,1);
+    }
+
     secondWindow->setWindowTitle("2D моделирование");
     secondWindow->resize(800, 600);
     secondWindow->show();
@@ -454,11 +467,9 @@ Eigen::MatrixXd createColsMatrix(const Eigen::MatrixXd& A, const Eigen::Vector4d
 const double l_max = 0.3;
 bool isFirstReadFlag = true;
 
-QVector<double> values = MainWindow::readIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/app/values.ini", "Base");
+QVector<double> values = MainWindow::readIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app/values.ini", "Base");
 QVector<double> constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
 QVector<double> val = {values[9], values[10], values[11], values[12]};
-
-QVector<double> y_obs = {0.0, 0.0, M_PI / 6, 0.0};
 
 const double m1 = constants[0];
 const double m2 = constants[1];
@@ -470,63 +481,7 @@ const double Fc = constants[6];
 const double b2 = constants[7];
 const double k2 = constants[8];
 
-
-Eigen::Vector4d y_0(0.0, 0.0, M_PI / 6, 0.0);
-
-Eigen::MatrixXd A_0({
-    {0, 1, 0, 0},
-    {0, 0, 0, 0},
-    {0, 0, 0, 0},
-    {0, 0, ((values[1]+(values[2])/2)*9.81*cos(y_0[2])-values[7])/((values[1]+(values[2])/4)*(values[3])), -values[8]/((values[1]+(values[2])/4)*values[3]*values[3])}
-});
-
-Eigen::MatrixXd M({
-    {1, 0, 0, 0},
-    {0, 1, 0, -((m2+(m3)/2)*cos(y_0[2])*l)/(m1+m2+m3)},
-    {0, 0, 1, 0},
-    {0, -((m2+(m3)/2)*cos(y_0[2])*l)/((m2+(m3)/4)*l*l), 0, 1}
-});
-
-Eigen::MatrixXd A = M.inverse() * A_0;
-
-// Создание вектора C
-Eigen::Vector4d C(1, 1, 1, 1);
-
-// Добавляем создание вектора vec
-Eigen::Vector4d vec(0, 0, 0, 1);
-
-// Создание матрицы из столбцов [C', A'*C', (A'^2)*C', (A'^3)*C']
-Eigen::MatrixXd cols = createColsMatrix(A, C.transpose());
-
-// Инверсия полученной матрицы
-Eigen::MatrixXd invCols = cols.inverse();
-
-// Вычисление матрицы term
-Eigen::MatrixXd A_t = A.transpose();
-Eigen::MatrixXd A_pow4 = matrixPower(A_t, 4);
-Eigen::MatrixXd A_pow3 = matrixPower(A_t, 3);
-Eigen::MatrixXd A_pow2 = matrixPower(A_t, 2);
-
-Eigen::MatrixXd term = A_pow4 + 2.6 * 8 * A_pow3 + 3.4 * 64 * A_pow2 + 2.6 * 512 * A_t + 4096 * Eigen::MatrixXd::Identity(4, 4);
-
-// Вычисление итоговой матрицы H
-Eigen::MatrixXd H = vec.transpose() * invCols * term;
-
-/*
-Eigen::MatrixXd C = Eigen::MatrixXd::Identity(4, 4);
-
-Eigen::MatrixXd invA = (A.transpose()).inverse(); // Инверсия транспонированной матрицы A
-Eigen::MatrixXd invC = C.inverse(); // Инверсия единичной матрицы, которая просто даст единичную матрицу
-
-Eigen::MatrixXd A_pow4 = matrixPower(A.transpose(), 4);
-Eigen::MatrixXd A_pow3 = matrixPower(A.transpose(), 3);
-Eigen::MatrixXd A_pow2 = matrixPower(A.transpose(), 2);
-
-Eigen::MatrixXd H = (A_pow4 + 2.6*8*A_pow3 + 3.4*64*A_pow2 + 2.6*512*A.transpose() + 4096*Eigen::MatrixXd::Identity(4, 4)) * invA * invC;
-*/
-
 QVector<double> result = MainWindow::rungeKutta(0, 1, 100, val, constants);
-QVector<double> resultObs = MainWindow::rungeKuttaObserver(0, 1, 100, y_obs, constants, H);
 
 void MainWindow::on_saveButton_clicked(){
     QString inputText;
@@ -550,13 +505,6 @@ void MainWindow::on_saveButton_clicked(){
 
     if (isAllOk)
         modifiIni(localPath + "/values.ini", newValues);
-
-    QString selectedItem = observerComboBox->currentText();
-    if (selectedItem == "Без наблюдателя") {
-        observerFlag = false;
-    } else if (selectedItem == "Наблюдатель с большим коэффициентом усиления") {
-        observerFlag = true;
-    }
 }
 
 void MainWindow::on_startButton_clicked(){
@@ -568,10 +516,6 @@ void MainWindow::on_startButton_clicked(){
     constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
     val = {values[9], values[10], values[11], values[12]};
     result = MainWindow::rungeKutta(0, 1, 100, val, constants);
-    if (!observerFlag){
-        y_obs = {0.0, 0.0, M_PI / 6, 0.0};
-        resultObs = MainWindow::rungeKuttaObserver(0, 1, 100, y_obs, constants, H);
-    }
 
     T = beginT;
     plotTime.clear();
@@ -579,14 +523,18 @@ void MainWindow::on_startButton_clicked(){
     plotVxY.clear();
     plotFiY.clear();
     plotOmegaFiY.clear();
-    plotObsXY.clear();
-    plotObsVxY.clear();
-    plotObsFiY.clear();
-    plotObsOmegaFiY.clear();
 
     for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
         plot->clearGraphs();
     }
+
+    std::pair<int, int>* plotSizes[] = {&plotXSize, &plotVxSize, &plotFiSize, &plotOmegaFiSize};
+
+    for (auto* plotSize : plotSizes) {
+        plotSize->first = -1;
+        plotSize->second = 1;
+    }
+    plotTSize = 10;
 
     timer->start(100);
 }
@@ -602,14 +550,6 @@ void MainWindow::on_writeButton_clicked(){
 
 void MainWindow::timer_slot(){
     result = MainWindow::rungeKutta(0, 1, 100, result, constants);
-    if (observerFlag){
-        resultObs = MainWindow::rungeKuttaObserver(0, 1, 100, y_obs, constants, H);
-        plotObsXY.push_back(resultObs[0]);
-        plotObsVxY.push_back(resultObs[1]);
-        plotObsFiY.push_back(resultObs[2]);
-        plotObsOmegaFiY.push_back(resultObs[3]);
-        y_obs = resultObs;
-    }
 
     if (result[0] > l_max || result[0] < -l_max)
         result[1] = 0;
@@ -632,38 +572,47 @@ void MainWindow::timer_slot(){
     plotFiY.push_back(MainWindow::to_degrees(result[2]));
     plotOmegaFiY.push_back(MainWindow::to_degrees(result[3]));
 
+    //Убирает задержку в работе
+    for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
+        plot->clearGraphs();
+    }
+
+    if (T > plotTSize * 0.9){
+        plotTSize = plotTSize * 1.5;
+        for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
+            plot->xAxis->setRange(-1, plotTSize);
+        }
+    }
+
+    plotXSize = MainWindow::calculatePlotScale(plotXSize, plotXY.last());
+    plotVxSize = MainWindow::calculatePlotScale(plotVxSize, plotVxY.last());
+    plotFiSize = MainWindow::calculatePlotScale(plotFiSize, plotFiY.last());
+    plotOmegaFiSize = MainWindow::calculatePlotScale(plotOmegaFiSize, plotOmegaFiY.last());
+
     T += stepT;
 
     plot1->addGraph();
-    plot1->addGraph();
     plot1->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
     plot1->graph(0)->addData(plotTime, plotXY);
-    plot1->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
-    plot1->graph(1)->addData(plotTime, plotObsXY);
+    plot1->yAxis->setRange(plotXSize.first, plotXSize.second);
     plot1->replot();
 
     plot2->addGraph();
-    plot2->addGraph();
     plot2->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
     plot2->graph(0)->addData(plotTime, plotVxY);
-    plot2->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
-    plot2->graph(1)->addData(plotTime, plotObsVxY);
+    plot2->yAxis->setRange(plotVxSize.first, plotVxSize.second);
     plot2->replot();
 
     plot3->addGraph();
-    plot3->addGraph();
     plot3->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
     plot3->graph(0)->addData(plotTime, plotFiY);
-    plot3->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
-    plot3->graph(1)->addData(plotTime, plotObsFiY);
+    plot3->yAxis->setRange(plotFiSize.first, plotFiSize.second);
     plot3->replot();
 
     plot4->addGraph();
-    plot4->addGraph();
     plot4->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
     plot4->graph(0)->addData(plotTime, plotOmegaFiY);
-    plot4->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
-    plot4->graph(1)->addData(plotTime, plotObsOmegaFiY);
+    plot4->yAxis->setRange(plotOmegaFiSize.first, plotOmegaFiSize.second);
     plot4->replot();
 }
 
