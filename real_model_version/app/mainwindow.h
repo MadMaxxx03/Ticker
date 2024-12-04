@@ -55,6 +55,8 @@ private slots:
     void on_startButton_clicked();
     void on_stopButton_clicked();
     void on_writeButton_clicked();
+    void onSimulationClicked();
+    void onStendClicked();
     void timer_slot();
 
 public:
@@ -89,12 +91,15 @@ private:
     QAction *D2ModelingAction;
     QAction *D3ModelingAction;
     QAction *initValAction;
+    QAction *modelingAction;
+    QAction *stendAction;
 
     QComboBox *observerComboBox;
+    QComboBox *portComboBox;
+    QComboBox *baudRateComboBox;
 
-    QStackedWidget *stackedWidget;
-    QWidget *D3Widget;
-    QWidget *centralWidget;
+    QStackedLayout *menuStackedLayout;
+    QWidget *stendWidget;
     QWidget *initialValuesWidget;
 
     QLabel * labeModelParams;
@@ -113,6 +118,13 @@ private:
     QLabel * labelV;
     QLabel * labelFi;
     QLabel * labelW;
+
+    QLabel * labePort;
+    QLabel * labelBaudRate;
+    QLabel * labelDataBits;
+    QLabel * labelParity;
+    QLabel * labelStopBits;
+    QLabel * labelFlowControl;
 
     QLineEdit * editm1;
     QLineEdit * editm2;

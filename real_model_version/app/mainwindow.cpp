@@ -17,9 +17,25 @@ MainWindow::MainWindow(QWidget *parent)
 
     QFont labelFont("Times", 15);
     QFont axisFont("Arial", 20);
+
     penSize = 5;
 
     localPath = "C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app";
+
+    QMenuBar *menuBar = this->menuBar();
+
+    QMenu *fileMenu = menuBar->addMenu("Режим");
+
+    modelingAction = new QAction("Моделирование", this);
+    connect(modelingAction, &QAction::triggered, this, &MainWindow::onSimulationClicked);
+    fileMenu->addAction(modelingAction);
+
+    stendAction = new QAction("Сненд", this);
+    connect(stendAction, &QAction::triggered, this, &MainWindow::onStendClicked);
+    fileMenu->addAction(stendAction);
+
+    menuBar->setFont(labelFont);
+    fileMenu->setFont(labelFont);
 
     initialValuesWidget = new QWidget;
     QVBoxLayout *initialValuesLayout = new QVBoxLayout;
@@ -276,15 +292,71 @@ MainWindow::MainWindow(QWidget *parent)
     QHBoxLayout *mainLayout = new QHBoxLayout;
 
     D3layout->addWidget(container);
-    QHBoxLayout *buttonsLayout = new QHBoxLayout;
+    QVBoxLayout *buttonsLayout = new QVBoxLayout;
     buttonsLayout->addWidget(saveButton);
     buttonsLayout->addWidget(startButton);
     buttonsLayout->addWidget(stopButton);
     buttonsLayout->addWidget(writeButton);
-    mainLayout->addLayout(menuLayout);
+    menuLayout->addLayout(buttonsLayout);
+
+
+    QVBoxLayout *testLayout = new QVBoxLayout;
+    QPushButton *testButton = new QPushButton("Test Button");
+    testLayout->addWidget(testButton);
+
+    QWidget *stendWidget = new QWidget;
+    QVBoxLayout *stendLayout = new QVBoxLayout;
+    QHBoxLayout *hStendLayout1 = new QHBoxLayout;
+    QHBoxLayout *hStendLayout2 = new QHBoxLayout;
+    QVBoxLayout *labelsStendLayout1 = new QVBoxLayout;
+    QVBoxLayout *boxStendLayout1 = new QVBoxLayout;
+
+    labePort = new QLabel("Port");
+    labelBaudRate = new QLabel("Baud Rate");
+    labelDataBits = new QLabel("Data Bits");
+    labelParity = new QLabel("Parity");
+    labelStopBits = new QLabel("Stop Bits");
+    labelFlowControl = new QLabel("Flow Control");
+
+    for (QLabel* label: {labePort, labelBaudRate}){
+        label->setFont(labelFont);
+        labelsStendLayout1->addWidget(label);
+    }
+
+    portComboBox = new QComboBox();
+    portComboBox->setFont(labelFont);
+    portComboBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    portComboBox->setMaximumWidth(300);
+    portComboBox->addItem("COM5");
+    portComboBox->addItem("None");
+    portComboBox->addItem("COM4");
+
+    baudRateComboBox = new QComboBox();
+    baudRateComboBox->setFont(labelFont);
+    baudRateComboBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    baudRateComboBox->setMaximumWidth(300);
+    baudRateComboBox->addItem("9600");
+    baudRateComboBox->addItem("None");
+
+    boxStendLayout1->addWidget(portComboBox);
+    boxStendLayout1->addWidget(baudRateComboBox);
+
+    hStendLayout1->addLayout(labelsStendLayout1);
+    hStendLayout1->addLayout(boxStendLayout1);
+    stendLayout->addLayout(hStendLayout1);
+    stendLayout->addLayout(hStendLayout2);
+    stendWidget->setLayout(stendLayout);
+
+    QWidget *menuWidget = new QWidget;
+    menuWidget->setLayout(menuLayout);
+
+    menuStackedLayout = new QStackedLayout;
+    menuStackedLayout->addWidget(menuWidget);
+    menuStackedLayout->addWidget(stendWidget);
+
+    mainLayout->addLayout(menuStackedLayout);
     mainLayout->addLayout(D3layout);
     initialValuesLayout->addLayout(mainLayout);
-    initialValuesLayout->addLayout(buttonsLayout);
     initialValuesWidget->setLayout(initialValuesLayout);
 
     // Корневая сущность
@@ -432,7 +504,6 @@ MainWindow::MainWindow(QWidget *parent)
     secondWindow->setWindowTitle("2D моделирование");
     secondWindow->resize(800, 600);
     secondWindow->show();
-
 }
 
 MainWindow::~MainWindow()
@@ -539,6 +610,16 @@ void MainWindow::on_startButton_clicked(){
     timer->start(100);
 }
 
+void MainWindow::onSimulationClicked(){
+    menuStackedLayout->setCurrentIndex(0);
+}
+
+void MainWindow::onStendClicked(){
+    menuStackedLayout->setCurrentIndex(1);
+
+    timer->stop();
+}
+
 void MainWindow::on_stopButton_clicked(){
     timer->stop();
 }
@@ -554,7 +635,7 @@ void MainWindow::timer_slot(){
     if (result[0] > l_max || result[0] < -l_max)
         result[1] = 0;
 
-    float angle = MainWindow::to_degrees(result[2]) - 180;
+    float angle = -MainWindow::to_degrees(result[2]);
     QMatrix4x4 matrix;
     matrix.rotate(angle, QVector3D(0.0f, 0.0f, 1.0f));
     matrix.translate(QVector3D(0.0f, -2.5f, 0.0f)); // Позиционирование стержня относительно каретки
