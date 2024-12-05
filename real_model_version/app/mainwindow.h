@@ -55,6 +55,8 @@ private slots:
     void on_startButton_clicked();
     void on_stopButton_clicked();
     void on_writeButton_clicked();
+    void on_extraParamsButton_clicked();
+    void on_connectButton_clicked();
     void onSimulationClicked();
     void onStendClicked();
     void timer_slot();
@@ -97,6 +99,10 @@ private:
     QComboBox *observerComboBox;
     QComboBox *portComboBox;
     QComboBox *baudRateComboBox;
+    QComboBox *dataBitsComboBox;
+    QComboBox *parityComboBox;
+    QComboBox *stopBitsComboBox;
+    QComboBox *flowControlComboBox;
 
     QStackedLayout *menuStackedLayout;
     QWidget *stendWidget;
@@ -170,6 +176,10 @@ private:
     QPushButton *startButton;
     QPushButton *stopButton;
     QPushButton *writeButton;
+    QPushButton *extraParamsButton;
+    QPushButton *extraParamsStendButton;
+    QPushButton *connectButton;
+
 
     QString localPath;
 

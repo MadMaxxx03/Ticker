@@ -84,10 +84,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     fields = {editm1, editm2, editm3, editl, editFf, editFr, editFc, editb2, editk2, editX, editV, editFi, editW};
 
+    extraParamsStendButton = new QPushButton("Управление и наблюдатель");
+    extraParamsStendButton->setFixedHeight(40);
+    extraParamsStendButton->setFont(labelFont);
+    connect(extraParamsStendButton, &QPushButton::clicked, this, &MainWindow::on_extraParamsButton_clicked);
+
+    extraParamsButton = new QPushButton("Управление и наблюдатель");
+    extraParamsButton->setFixedHeight(40);
+    extraParamsButton->setFont(labelFont);
+    connect(extraParamsButton, &QPushButton::clicked, this, &MainWindow::on_extraParamsButton_clicked);
+
+
     saveButton = new QPushButton("Сохранить значения");
     saveButton->setFixedHeight(40);
     saveButton->setFont(labelFont);
-
     connect(saveButton, &QPushButton::clicked, this, &MainWindow::on_saveButton_clicked);
 
     for (QLabel* label: {labelm1, labelm2, labelm3, labell, labelFf, labelFr, labelFc, labelb2}){
@@ -293,6 +303,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     D3layout->addWidget(container);
     QVBoxLayout *buttonsLayout = new QVBoxLayout;
+    buttonsLayout->addWidget(extraParamsButton);
     buttonsLayout->addWidget(saveButton);
     buttonsLayout->addWidget(startButton);
     buttonsLayout->addWidget(stopButton);
@@ -308,8 +319,31 @@ MainWindow::MainWindow(QWidget *parent)
     QVBoxLayout *stendLayout = new QVBoxLayout;
     QHBoxLayout *hStendLayout1 = new QHBoxLayout;
     QHBoxLayout *hStendLayout2 = new QHBoxLayout;
+    QHBoxLayout *hStendLayout3 = new QHBoxLayout;
     QVBoxLayout *labelsStendLayout1 = new QVBoxLayout;
     QVBoxLayout *boxStendLayout1 = new QVBoxLayout;
+
+    connectButton = new QPushButton("Подключиться");
+    connectButton->setFixedHeight(40);
+    connectButton->setFont(labelFont);
+    connect(connectButton, &QPushButton::clicked, this, &MainWindow::on_connectButton_clicked);
+
+    QRadioButton *indicator = new QRadioButton;
+    indicator->setText(""); // Убираем текст
+    indicator->setFixedSize(30, 30); // Устанавливаем размер
+    indicator->setStyleSheet(
+        "QRadioButton::indicator {"
+        "   width: 30px;"
+        "   height: 30px;"
+        "   border-radius: 15px;" // Круглая форма
+        "   background-color: red;"
+        "}"
+    );
+
+    hStendLayout2->addWidget(extraParamsStendButton);
+    hStendLayout3->addWidget(indicator);
+    hStendLayout3->addSpacing(20);
+    hStendLayout3->addWidget(connectButton);
 
     labePort = new QLabel("Port");
     labelBaudRate = new QLabel("Baud Rate");
@@ -318,33 +352,54 @@ MainWindow::MainWindow(QWidget *parent)
     labelStopBits = new QLabel("Stop Bits");
     labelFlowControl = new QLabel("Flow Control");
 
-    for (QLabel* label: {labePort, labelBaudRate}){
+    for (QLabel* label: {labePort, labelBaudRate, labelDataBits,
+         labelParity, labelStopBits, labelFlowControl}){
         label->setFont(labelFont);
+        label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         labelsStendLayout1->addWidget(label);
+        labelsStendLayout1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     }
 
     portComboBox = new QComboBox();
-    portComboBox->setFont(labelFont);
-    portComboBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    portComboBox->setMaximumWidth(300);
     portComboBox->addItem("COM5");
     portComboBox->addItem("None");
     portComboBox->addItem("COM4");
 
     baudRateComboBox = new QComboBox();
-    baudRateComboBox->setFont(labelFont);
-    baudRateComboBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    baudRateComboBox->setMaximumWidth(300);
     baudRateComboBox->addItem("9600");
     baudRateComboBox->addItem("None");
 
-    boxStendLayout1->addWidget(portComboBox);
-    boxStendLayout1->addWidget(baudRateComboBox);
+    dataBitsComboBox = new QComboBox();
+    dataBitsComboBox->addItem("8");
+    dataBitsComboBox->addItem("None");
+
+    parityComboBox = new QComboBox();
+    parityComboBox->addItem("None");
+    parityComboBox->addItem("");
+
+    stopBitsComboBox = new QComboBox();
+    stopBitsComboBox->addItem("1");
+    stopBitsComboBox->addItem("None");
+
+    flowControlComboBox = new QComboBox();
+    flowControlComboBox->addItem("None");
+    flowControlComboBox->addItem("");
+
+    for (QComboBox* box: {portComboBox, baudRateComboBox, dataBitsComboBox,
+             parityComboBox, stopBitsComboBox, flowControlComboBox}){
+        box->setFont(labelFont);
+        box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        box->setMaximumWidth(300);
+        boxStendLayout1->addWidget(box);
+        boxStendLayout1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    }
 
     hStendLayout1->addLayout(labelsStendLayout1);
     hStendLayout1->addLayout(boxStendLayout1);
     stendLayout->addLayout(hStendLayout1);
     stendLayout->addLayout(hStendLayout2);
+    stendLayout->addSpacing(20);
+    stendLayout->addLayout(hStendLayout3);
     stendWidget->setLayout(stendLayout);
 
     QWidget *menuWidget = new QWidget;
@@ -353,9 +408,12 @@ MainWindow::MainWindow(QWidget *parent)
     menuStackedLayout = new QStackedLayout;
     menuStackedLayout->addWidget(menuWidget);
     menuStackedLayout->addWidget(stendWidget);
+    menuStackedLayout->setSizeConstraint(QLayout::SetFixedSize);
 
     mainLayout->addLayout(menuStackedLayout);
     mainLayout->addLayout(D3layout);
+    mainLayout->setStretch(0, 0); // Левый лэйаут не растягивается
+    mainLayout->setStretch(1, 1); // Правый лэйаут растягивается
     initialValuesLayout->addLayout(mainLayout);
     initialValuesWidget->setLayout(initialValuesLayout);
 
@@ -622,6 +680,14 @@ void MainWindow::onStendClicked(){
 
 void MainWindow::on_stopButton_clicked(){
     timer->stop();
+}
+
+void MainWindow::on_extraParamsButton_clicked(){
+
+}
+
+void MainWindow::on_connectButton_clicked(){
+
 }
 
 void MainWindow::on_writeButton_clicked(){
