@@ -319,6 +319,7 @@ MainWindow::MainWindow(QWidget *parent)
     QVBoxLayout *stendLayout = new QVBoxLayout;
     QHBoxLayout *hStendLayout1 = new QHBoxLayout;
     QHBoxLayout *hStendLayout2 = new QHBoxLayout;
+    QHBoxLayout *hStendLayoutText = new QHBoxLayout;
     QHBoxLayout *hStendLayout3 = new QHBoxLayout;
     QVBoxLayout *labelsStendLayout1 = new QVBoxLayout;
     QVBoxLayout *boxStendLayout1 = new QVBoxLayout;
@@ -340,6 +341,8 @@ MainWindow::MainWindow(QWidget *parent)
         "}"
     );
 
+    logsEdit = new QTextEdit();
+    hStendLayoutText->addWidget(logsEdit);
     hStendLayout2->addWidget(extraParamsStendButton);
     hStendLayout3->addWidget(indicator);
     hStendLayout3->addSpacing(20);
@@ -361,13 +364,23 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     portComboBox = new QComboBox();
-    portComboBox->addItem("COM5");
-    portComboBox->addItem("None");
+    portComboBox->addItem("COM6");
+    portComboBox->addItem("COM1");
+    portComboBox->addItem("COM2");
+    portComboBox->addItem("COM3");
     portComboBox->addItem("COM4");
+    portComboBox->addItem("COM5");
+    portComboBox->addItem("COM7");
+    portComboBox->addItem("COM8");
+    portComboBox->addItem("COM9");
+    portComboBox->addItem("COM10");
 
     baudRateComboBox = new QComboBox();
     baudRateComboBox->addItem("9600");
-    baudRateComboBox->addItem("None");
+    baudRateComboBox->addItem("1200");
+    baudRateComboBox->addItem("2400");
+    baudRateComboBox->addItem("4800");
+    baudRateComboBox->addItem("115200");
 
     dataBitsComboBox = new QComboBox();
     dataBitsComboBox->addItem("8");
@@ -397,8 +410,11 @@ MainWindow::MainWindow(QWidget *parent)
     hStendLayout1->addLayout(labelsStendLayout1);
     hStendLayout1->addLayout(boxStendLayout1);
     stendLayout->addLayout(hStendLayout1);
+    stendLayout->addSpacing(15);
+    stendLayout->addLayout(hStendLayoutText);
+    stendLayout->addSpacing(15);
     stendLayout->addLayout(hStendLayout2);
-    stendLayout->addSpacing(20);
+    stendLayout->addSpacing(10);
     stendLayout->addLayout(hStendLayout3);
     stendWidget->setLayout(stendLayout);
 
@@ -687,7 +703,68 @@ void MainWindow::on_extraParamsButton_clicked(){
 }
 
 void MainWindow::on_connectButton_clicked(){
+    QSerialPort serial;
 
+    // Считывание выбранного порта
+    QString selectedPort = portComboBox->currentText();
+    serial.setPortName(selectedPort);
+
+    // Считывание выбранной скорости передачи данных
+    int selectedBaudRate = baudRateComboBox->currentText().toInt();
+    serial.setBaudRate(static_cast<QSerialPort::BaudRate>(selectedBaudRate));
+
+    // Считывание количества бит данных
+    int selectedDataBits = dataBitsComboBox->currentText().toInt();
+    serial.setDataBits(static_cast<QSerialPort::DataBits>(selectedDataBits));
+
+    // Считывание четности
+    QString selectedParity = parityComboBox->currentText();
+    if (selectedParity == "None") {
+        serial.setParity(QSerialPort::NoParity);
+    } else {
+        // Дополнительные варианты при необходимости
+    }
+
+    // Считывание стоп-битов
+    QString selectedStopBits = stopBitsComboBox->currentText();
+    if (selectedStopBits == "1") {
+        serial.setStopBits(QSerialPort::OneStop);
+    } else {
+        // Дополнительные варианты при необходимости
+    }
+
+    // Считывание управления потоком
+    QString selectedFlowControl = flowControlComboBox->currentText();
+    if (selectedFlowControl == "None") {
+        serial.setFlowControl(QSerialPort::NoFlowControl);
+    } else {
+        // Дополнительные варианты при необходимости
+    }
+
+
+    if (serial.open(QIODevice::ReadWrite)) {
+        logsEdit->append("Serial port opened successfully.");
+
+        // Отправка данных на порт
+        serial.write("Hello, Serial Port!\n");
+        logsEdit->append("Sent data: Hello, Serial Port!");
+
+        // Ожидание ответа
+        if (serial.waitForReadyRead(3000)) {  // Ожидание данных 3 секунды
+            QByteArray data = serial.readAll();
+            logsEdit->append("Received data: " + data.toHex());
+
+            // Парсинг пакета
+            MainWindow::parsePacket(data);
+        } else {
+            logsEdit->append("No data received within the timeout.");
+        }
+
+        serial.close();
+        logsEdit->append("Serial port closed.");
+    } else {
+        logsEdit->append("Failed to open serial port: " + serial.errorString());
+    }
 }
 
 void MainWindow::on_writeButton_clicked(){

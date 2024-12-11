@@ -159,6 +159,23 @@ pair<int, int> MainWindow::calculatePlotScale(const pair<int, int> scale, double
     return newScale;
 }
 
+void MainWindow::parsePacket(const QByteArray &packet) {
+    if (packet.size() < 16 || packet.size() % 4 != 0) {
+        qDebug() << "Invalid packet size. Expected multiple of 4 bytes.";
+        return;
+    }
+
+    QDataStream stream(packet);
+    stream.setByteOrder(QDataStream::LittleEndian);  // Проверьте порядок байтов
+
+    qDebug() << "Parsed values:";
+    while (!stream.atEnd()) {
+        float value;
+        stream >> value;
+        qDebug() << value;
+    }
+}
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

@@ -37,6 +37,10 @@
 #include <QFile>
 #include <QTextStream>
 #include <Eigen/Dense>
+#include <QCoreApplication>
+#include <QSerialPort>
+#include <QSerialPortInfo>
+#include <QDebug>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -72,6 +76,7 @@ public:
     static void writeToOutput(QString path, const QVector<double>& v1, const QVector<double>& v2, const QVector<double>& v3, const QVector<double>& v4, const QVector<double>& v5);
     static std::pair<int, int> calculatePlotScale(const std::pair<int, int> scale, double value);
     static double to_degrees(double radians);
+    static void parsePacket(const QByteArray &packet);
 
 private:
     Ui::MainWindow *ui;
@@ -103,6 +108,8 @@ private:
     QComboBox *parityComboBox;
     QComboBox *stopBitsComboBox;
     QComboBox *flowControlComboBox;
+
+    QTextEdit *logsEdit;
 
     QStackedLayout *menuStackedLayout;
     QWidget *stendWidget;
