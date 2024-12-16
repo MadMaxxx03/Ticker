@@ -176,6 +176,10 @@ void MainWindow::parsePacket(const QByteArray &packet) {
     }
 }
 
+void MainWindow::displayInformation(){
+    cout << "Working..." << endl;
+}
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "secondwindow.h"
+#include "extraparamsdialog.h"
 #include <QLabel>
 #include <QDebug>
 #include <QLineEdit>
@@ -64,6 +65,7 @@ private slots:
     void onSimulationClicked();
     void onStendClicked();
     void timer_slot();
+    void timerStend_slot();
 
 public:
     static QVector<double> readIni(QString path, QString category);
@@ -77,16 +79,20 @@ public:
     static std::pair<int, int> calculatePlotScale(const std::pair<int, int> scale, double value);
     static double to_degrees(double radians);
     static void parsePacket(const QByteArray &packet);
+    static void displayInformation();
 
 private:
     Ui::MainWindow *ui;
     SecondWindow *secondWindow;
 
     QTimer *timer;
+    QTimer *timerStend;
     double beginT, stepT, T;
     int penSize;
 
     bool isFirstReadFlag;
+
+    QSerialPort* serial;
 
     Qt3DCore::QEntity *rootEntity;
     Qt3DExtras::Qt3DWindow *view;
@@ -101,7 +107,6 @@ private:
     QAction *modelingAction;
     QAction *stendAction;
 
-    QComboBox *observerComboBox;
     QComboBox *portComboBox;
     QComboBox *baudRateComboBox;
     QComboBox *dataBitsComboBox;
@@ -157,20 +162,7 @@ private:
     QList<QLineEdit*> fields;
 
     QLabel * labelControl;
-    QLabel * labelControlType;
-    QLabel * labelControlParam1;
-    QLabel * labelControlParam2;
-
-    QLineEdit * editControlParam1;
-    QLineEdit * editControlParam2;
-
     QLabel * labelObserver;
-    QLabel * labelObserverType;
-    QLabel * labelObserverParam1;
-    QLabel * labelObserverParam2;
-
-    QLineEdit * editObserverParam1;
-    QLineEdit * editObserverParam2;
 
     QCustomPlot *plot1;
     QCustomPlot *plot2;
