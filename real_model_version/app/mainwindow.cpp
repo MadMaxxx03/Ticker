@@ -18,12 +18,17 @@ MainWindow::MainWindow(QWidget *parent)
     timerStend = new QTimer(this);
     connect(timerStend, SIGNAL(timeout()), this, SLOT(timerStend_slot()));
 
+    //QFont labelFont("Times", 8);
+    //QFont axisFont("Arial", 10);
+    //penSize = 3;
+    //localPath = "C:/Ticker/real_model_version/app";
+
     QFont labelFont("Times", 15);
     QFont axisFont("Arial", 20);
-
     penSize = 5;
-
     localPath = "C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app";
+
+    serial = new QSerialPort(this);
 
     QMenuBar *menuBar = this->menuBar();
 
@@ -221,7 +226,7 @@ MainWindow::MainWindow(QWidget *parent)
     connectButton->setFont(labelFont);
     connect(connectButton, &QPushButton::clicked, this, &MainWindow::on_connectButton_clicked);
 
-    QRadioButton *indicator = new QRadioButton;
+    indicator = new QRadioButton(this);
     indicator->setText(""); // Убираем текст
     indicator->setFixedSize(30, 30); // Устанавливаем размер
     indicator->setStyleSheet(
@@ -256,16 +261,11 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     portComboBox = new QComboBox();
-    portComboBox->addItem("COM6");
-    portComboBox->addItem("COM1");
-    portComboBox->addItem("COM2");
-    portComboBox->addItem("COM3");
-    portComboBox->addItem("COM4");
-    portComboBox->addItem("COM5");
-    portComboBox->addItem("COM7");
-    portComboBox->addItem("COM8");
-    portComboBox->addItem("COM9");
-    portComboBox->addItem("COM10");
+
+    // Добавление портов от COM1 до COM32
+    for (int i = 1; i <= 32; ++i) {
+        portComboBox->addItem("COM" + QString::number(i));
+    }
 
     baudRateComboBox = new QComboBox();
     baudRateComboBox->addItem("9600");
@@ -276,6 +276,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     dataBitsComboBox = new QComboBox();
     dataBitsComboBox->addItem("8");
+    dataBitsComboBox->addItem("2");
+    dataBitsComboBox->addItem("4");
+    dataBitsComboBox->addItem("5");
+    dataBitsComboBox->addItem("16");
     dataBitsComboBox->addItem("None");
 
     parityComboBox = new QComboBox();
@@ -503,8 +507,9 @@ Eigen::MatrixXd createColsMatrix(const Eigen::MatrixXd& A, const Eigen::Vector4d
 
 const double l_max = 0.3;
 bool isFirstReadFlag = true;
+bool isConnected = false;
 
-QVector<double> values = MainWindow::readIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app/values.ini", "Base");
+QVector<double> values = MainWindow::readIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app", "Base");
 QVector<double> constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
 QVector<double> val = {values[9], values[10], values[11], values[12]};
 
@@ -582,7 +587,7 @@ void MainWindow::onSimulationClicked(){
 
 void MainWindow::onStendClicked(){
     menuStackedLayout->setCurrentIndex(1);
-
+    isConnected = false;
     timer->stop();
 }
 
@@ -596,70 +601,94 @@ void MainWindow::on_extraParamsButton_clicked(){
 }
 
 void MainWindow::on_connectButton_clicked(){
-    timerStend->start(1000);
-
-    QSerialPort serial;
     // Считывание выбранного порта
     QString selectedPort = portComboBox->currentText();
-    serial.setPortName(selectedPort);
+    serial->setPortName(selectedPort);
 
     // Считывание выбранной скорости передачи данных
     int selectedBaudRate = baudRateComboBox->currentText().toInt();
-    serial.setBaudRate(static_cast<QSerialPort::BaudRate>(selectedBaudRate));
+    serial->setBaudRate(static_cast<QSerialPort::BaudRate>(selectedBaudRate));
 
     // Считывание количества бит данных
     int selectedDataBits = dataBitsComboBox->currentText().toInt();
-    serial.setDataBits(static_cast<QSerialPort::DataBits>(selectedDataBits));
+    serial->setDataBits(static_cast<QSerialPort::DataBits>(selectedDataBits));
 
     // Считывание четности
     QString selectedParity = parityComboBox->currentText();
     if (selectedParity == "None") {
-        serial.setParity(QSerialPort::NoParity);
-    } else {
-        // Дополнительные варианты при необходимости
-    }
+        serial->setParity(QSerialPort::NoParity);
+    } else {}
 
     // Считывание стоп-битов
     QString selectedStopBits = stopBitsComboBox->currentText();
     if (selectedStopBits == "1") {
-        serial.setStopBits(QSerialPort::OneStop);
-    } else {
-        // Дополнительные варианты при необходимости
-    }
+        serial->setStopBits(QSerialPort::OneStop);
+    } else {}
 
     // Считывание управления потоком
     QString selectedFlowControl = flowControlComboBox->currentText();
     if (selectedFlowControl == "None") {
-        serial.setFlowControl(QSerialPort::NoFlowControl);
-    } else {
-        // Дополнительные варианты при необходимости
+        serial->setFlowControl(QSerialPort::NoFlowControl);
+    } else {}
+
+    if (isConnected){
+        timerStend->stop();
+        isConnected = false;
+        connectButton->setText("Подключиться");
+        indicator->setStyleSheet(
+            "QRadioButton::indicator {"
+            "   width: 30px;"
+            "   height: 30px;"
+            "   border-radius: 15px;" // Круглая форма
+            "   background-color: red;"
+            "}"
+        );
     }
+    else{
+        if (serial->open(QIODevice::ReadWrite)) {
+            logsEdit->append("Serial port opened successfully!");
+            if (serial->waitForReadyRead(3000)) {  // Ожидание данных 3 секунды
+                QByteArray data = serial->readAll();
+            }
 
+            serial->close();
 
-    if (serial.open(QIODevice::ReadWrite)) {
-        logsEdit->append("Serial port opened successfully.");
+            indicator->setStyleSheet(
+                "QRadioButton::indicator {"
+                "   width: 30px;"
+                "   height: 30px;"
+                "   border-radius: 15px;" // Круглая форма
+                "   background-color: green;"
+                "}"
+            );
 
-        // Отправка данных на порт
-        serial.write("Hello, Serial Port!\n");
-        logsEdit->append("Sent data: Hello, Serial Port!");
+            T = beginT;
+            plotTime.clear();
+            plotXY.clear();
+            plotVxY.clear();
+            plotFiY.clear();
+            plotOmegaFiY.clear();
 
-        // Ожидание ответа
-        if (serial.waitForReadyRead(3000)) {  // Ожидание данных 3 секунды
-            QByteArray data = serial.readAll();
-            logsEdit->append("Received data: " + data.toHex());
+            for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
+                plot->clearGraphs();
+            }
 
-            // Парсинг пакета
-            MainWindow::parsePacket(data);
+            std::pair<int, int>* plotSizes[] = {&plotXSize, &plotVxSize, &plotFiSize, &plotOmegaFiSize};
+
+            for (auto* plotSize : plotSizes) {
+                plotSize->first = -1;
+                plotSize->second = 1;
+            }
+            plotTSize = 10;
+            isConnected = true;
+            connectButton->setText("Отключиться");
+            timerStend->start(100);
+
         } else {
-            logsEdit->append("No data received within the timeout.");
+            logsEdit->append("Failed to open serial port: " + serial->errorString());
         }
 
-        serial.close();
-        logsEdit->append("Serial port closed.");
-    } else {
-        logsEdit->append("Failed to open serial port: " + serial.errorString());
     }
-
 }
 
 void MainWindow::on_writeButton_clicked(){
@@ -668,7 +697,77 @@ void MainWindow::on_writeButton_clicked(){
 }
 
 void MainWindow::timerStend_slot(){
-    MainWindow::displayInformation();
+    //MainWindow::displayInformation(logsEdit, serial);
+    if (serial->open(QIODevice::ReadWrite)) {
+        if (serial->waitForReadyRead(50)) {  // Ожидание данных 1 секунды
+            QByteArray data = serial->readAll();
+            QVector<double> valuesSerial = parsePacket(data);
+
+            plotTime.push_back(T);
+            plotXY.push_back(valuesSerial[0]);
+            plotVxY.push_back(valuesSerial[1]);
+            plotFiY.push_back(MainWindow::to_degrees(valuesSerial[2]));
+            plotOmegaFiY.push_back(MainWindow::to_degrees(valuesSerial[3]));
+
+            //Убирает задержку в работе
+            for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
+                plot->clearGraphs();
+            }
+
+            if (T > plotTSize * 0.9){
+                plotTSize = plotTSize * 1.5;
+                for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
+                    plot->xAxis->setRange(-1, plotTSize);
+                }
+            }
+
+            plotXSize = MainWindow::calculatePlotScale(plotXSize, plotXY.last());
+            plotVxSize = MainWindow::calculatePlotScale(plotVxSize, plotVxY.last());
+            plotFiSize = MainWindow::calculatePlotScale(plotFiSize, plotFiY.last());
+            plotOmegaFiSize = MainWindow::calculatePlotScale(plotOmegaFiSize, plotOmegaFiY.last());
+
+            T += 0.1;
+
+            plot1->addGraph();
+            plot1->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
+            plot1->graph(0)->addData(plotTime, plotXY);
+            plot1->yAxis->setRange(plotXSize.first, plotXSize.second);
+            plot1->replot();
+
+            plot2->addGraph();
+            plot2->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
+            plot2->graph(0)->addData(plotTime, plotVxY);
+            plot2->yAxis->setRange(plotVxSize.first, plotVxSize.second);
+            plot2->replot();
+
+            plot3->addGraph();
+            plot3->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
+            plot3->graph(0)->addData(plotTime, plotFiY);
+            plot3->yAxis->setRange(plotFiSize.first, plotFiSize.second);
+            plot3->replot();
+
+            plot4->addGraph();
+            plot4->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
+            plot4->graph(0)->addData(plotTime, plotOmegaFiY);
+            plot4->yAxis->setRange(plotOmegaFiSize.first, plotOmegaFiSize.second);
+            plot4->replot();
+        } else {
+            logsEdit->append("No data received within the timeout.");
+        }
+        serial->close();
+    } else {
+        logsEdit->append("Failed to open serial port: " + serial->errorString());
+
+        indicator->setStyleSheet(
+            "QRadioButton::indicator {"
+            "   width: 30px;"
+            "   height: 30px;"
+            "   border-radius: 15px;" // Круглая форма
+            "   background-color: red;"
+            "}"
+        );
+        timerStend->stop();
+    }
 }
 
 void MainWindow::timer_slot(){

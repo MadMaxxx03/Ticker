@@ -78,8 +78,8 @@ public:
     static void writeToOutput(QString path, const QVector<double>& v1, const QVector<double>& v2, const QVector<double>& v3, const QVector<double>& v4, const QVector<double>& v5);
     static std::pair<int, int> calculatePlotScale(const std::pair<int, int> scale, double value);
     static double to_degrees(double radians);
-    static void parsePacket(const QByteArray &packet);
-    static void displayInformation();
+    static QVector<double> parsePacket(const QByteArray &packet);
+    static void displayInformation(QTextEdit *logsEdit, QSerialPort* serial);
 
 private:
     Ui::MainWindow *ui;
@@ -90,9 +90,11 @@ private:
     double beginT, stepT, T;
     int penSize;
 
-    bool isFirstReadFlag;
+    bool isFirstReadFlag, isConnected;
 
     QSerialPort* serial;
+
+    QRadioButton *indicator;
 
     Qt3DCore::QEntity *rootEntity;
     Qt3DExtras::Qt3DWindow *view;
@@ -136,7 +138,6 @@ private:
     QLabel * labelV;
     QLabel * labelFi;
     QLabel * labelW;
-
     QLabel * labePort;
     QLabel * labelBaudRate;
     QLabel * labelDataBits;

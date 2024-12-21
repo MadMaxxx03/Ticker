@@ -159,25 +159,61 @@ pair<int, int> MainWindow::calculatePlotScale(const pair<int, int> scale, double
     return newScale;
 }
 
-void MainWindow::parsePacket(const QByteArray &packet) {
-    if (packet.size() < 16 || packet.size() % 4 != 0) {
-        qDebug() << "Invalid packet size. Expected multiple of 4 bytes.";
-        return;
+QVector<double> MainWindow::parsePacket(const QByteArray &packet) {
+    QVector<double> values(4, 0.0); // Массив для хранения результатов
+
+    // Найти строку между символами $ и /
+    int start = packet.indexOf('$');
+    int end = packet.indexOf('/', start);
+    if (start == -1 || end == -1 || start >= end) {
+        qDebug() << "Invalid packet format!";
+        return values; // Вернуть пустые значения, если формат неверен
     }
 
-    QDataStream stream(packet);
-    stream.setByteOrder(QDataStream::LittleEndian);  // Проверьте порядок байтов
+    QByteArray rawData = packet.mid(start + 1, end - start - 1);
+    //qDebug() << "Extracted data:" << rawData; // Выводим извлеченную строку
 
-    qDebug() << "Parsed values:";
-    while (!stream.atEnd()) {
-        float value;
-        stream >> value;
-        qDebug() << value;
+    // Убедиться, что длина данных кратна 8 символам (32-битное число в hex)
+    if (rawData.size() % 8 != 0 || rawData.size() / 8 != 4) {
+        qDebug() << "Data length is invalid!";
+        return values;
     }
+
+    // Конвертировать каждую группу из 8 символов в float
+    for (int i = 0; i < 4; ++i) {
+        QByteArray hexValue = rawData.mid(i * 8, 8); // Берем 8 символов
+        bool ok;
+        uint32_t intValue = hexValue.toUInt(&ok, 16); // Преобразуем в uint32_t
+        if (ok) {
+            float floatValue;
+            memcpy(&floatValue, &intValue, sizeof(floatValue)); // Преобразуем в float
+            values[i] = static_cast<double>(floatValue); // Сохраняем результат
+        } else {
+            qDebug() << "Conversion error for:" << hexValue;
+        }
+    }
+
+    return values;
 }
 
-void MainWindow::displayInformation(){
-    cout << "Working..." << endl;
+void MainWindow::displayInformation(QTextEdit *logsEdit, QSerialPort* serial){
+    if (serial->open(QIODevice::ReadWrite)) {
+        if (serial->waitForReadyRead(1000)) {  // Ожидание данных 1 секунды
+            QByteArray data = serial->readAll();
+            logsEdit->append("Packet");
+            QVector<double> values = parsePacket(data);
+            // Вывод значений в logsEdit
+            for (int i = 0; i < values.size(); ++i) {
+                logsEdit->append(QString("Value %1: %2").arg(i + 1).arg(values[i], 0, 'f', 6));
+            }
+        } else {
+            logsEdit->append("No data received within the timeout.");
+        }
+        serial->close();
+        //logsEdit->append("Serial port closed.");
+    } else {
+        logsEdit->append("Failed to open serial port: " + serial->errorString());
+    }
 }
 
 int main(int argc, char *argv[])
