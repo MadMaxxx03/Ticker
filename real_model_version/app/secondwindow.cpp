@@ -6,9 +6,9 @@ SecondWindow::SecondWindow(QWidget *parent)
     QWidget *centralWidget = new QWidget(); // Создаем основной виджет
     setCentralWidget(centralWidget); // Устанавливаем его как центральный виджет
 
-    QFont labelFont("Times", 20);
-    QFont axisFont("Arial", 25);
-    int penSize = 5;
+    QFont labelFont("Times", 8);
+    QFont axisFont("Arial", 10);
+    int penSize = 3;
 
     QVBoxLayout *centralLayout = new QVBoxLayout(centralWidget);
 

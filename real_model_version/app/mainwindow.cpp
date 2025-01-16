@@ -18,15 +18,15 @@ MainWindow::MainWindow(QWidget *parent)
     timerStend = new QTimer(this);
     connect(timerStend, SIGNAL(timeout()), this, SLOT(timerStend_slot()));
 
-    //QFont labelFont("Times", 8);
-    //QFont axisFont("Arial", 10);
-    //penSize = 3;
-    //localPath = "C:/Ticker/real_model_version/app";
+    QFont labelFont("Times", 8);
+    QFont axisFont("Arial", 10);
+    penSize = 3;
+    localPath = "C:/Ticker/real_model_version/app";
 
-    QFont labelFont("Times", 15);
-    QFont axisFont("Arial", 20);
-    penSize = 5;
-    localPath = "C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app";
+    //QFont labelFont("Times", 15);
+    //QFont axisFont("Arial", 20);
+    //penSize = 5;
+    //localPath = "C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app";
 
     serial = new QSerialPort(this);
 
@@ -509,7 +509,7 @@ const double l_max = 0.3;
 bool isFirstReadFlag = true;
 bool isConnected = false;
 
-QVector<double> values = MainWindow::readIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app", "Base");
+QVector<double> values = MainWindow::readIni("C:/Ticker/real_model_version/app", "Base");
 QVector<double> constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
 QVector<double> val = {values[9], values[10], values[11], values[12]};
 
