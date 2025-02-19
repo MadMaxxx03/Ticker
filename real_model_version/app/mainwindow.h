@@ -170,7 +170,7 @@ private:
     QCustomPlot *plot3;
     QCustomPlot *plot4;
 
-    QVector<double> plotTime, plotXY, plotVxY, plotFiY, plotOmegaFiY;
+    QVector<double> plotTime, plotXY, plotVxY, plotFiY, plotOmegaFiY, plotXYModel, plotVxYModel, plotFiYModel, plotOmegaFiYModel;
 
     QPushButton *saveButton;
     QPushButton *startButton;

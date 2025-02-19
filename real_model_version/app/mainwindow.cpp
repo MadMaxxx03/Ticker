@@ -18,15 +18,15 @@ MainWindow::MainWindow(QWidget *parent)
     timerStend = new QTimer(this);
     connect(timerStend, SIGNAL(timeout()), this, SLOT(timerStend_slot()));
 
-    QFont labelFont("Times", 8);
-    QFont axisFont("Arial", 10);
-    penSize = 3;
-    localPath = "C:/Ticker/real_model_version/app";
+    //QFont labelFont("Times", 8);
+    //QFont axisFont("Arial", 10);
+    //penSize = 3;
+    //localPath = "C:/Ticker/real_model_version/app";
 
-    //QFont labelFont("Times", 15);
-    //QFont axisFont("Arial", 20);
-    //penSize = 5;
-    //localPath = "C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app";
+    QFont labelFont("Times", 15);
+    QFont axisFont("Arial", 20);
+    penSize = 5;
+    localPath = "C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app";
 
     serial = new QSerialPort(this);
 
@@ -509,7 +509,7 @@ const double l_max = 0.3;
 bool isFirstReadFlag = true;
 bool isConnected = false;
 
-QVector<double> values = MainWindow::readIni("C:/Ticker/real_model_version/app", "Base");
+QVector<double> values = MainWindow::readIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app", "Base");
 QVector<double> constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
 QVector<double> val = {values[9], values[10], values[11], values[12]};
 
@@ -682,6 +682,21 @@ void MainWindow::on_connectButton_clicked(){
             plotTSize = 10;
             isConnected = true;
             connectButton->setText("Отключиться");
+
+            if (isFirstReadFlag){
+                modifiIni(localPath + "/values.ini", values);
+                isFirstReadFlag = false;
+            }
+            values = MainWindow::readIni(localPath + "/values.ini", "Modified");
+            constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
+            val = {values[9], values[10], values[11], values[12]};
+            result = MainWindow::rungeKutta(0, 1, 100, val, constants);
+
+            plotXYModel.clear();
+            plotVxYModel.clear();
+            plotFiYModel.clear();
+            plotOmegaFiYModel.clear();
+
             timerStend->start(100);
 
         } else {
@@ -697,7 +712,29 @@ void MainWindow::on_writeButton_clicked(){
 }
 
 void MainWindow::timerStend_slot(){
-    //MainWindow::displayInformation(logsEdit, serial);
+
+    result = MainWindow::rungeKutta(0, 1, 100, result, constants);
+
+    if (result[0] > l_max || result[0] < -l_max)
+        result[1] = 0;
+
+    float angle = -MainWindow::to_degrees(result[2]);
+    QMatrix4x4 matrix;
+    matrix.rotate(angle, QVector3D(0.0f, 0.0f, 1.0f));
+    matrix.translate(QVector3D(0.0f, -2.5f, 0.0f)); // Позиционирование стержня относительно каретки
+
+    QMatrix4x4 matrix2;
+    matrix2.rotate(0, QVector3D(0.0f, 0.0f, 1.0f));
+    matrix2.translate(QVector3D(result[0] * 100 / 3, 0.0f, 0.0f)); // Позиционирование стержня относительно каретки
+
+    cartTransform->setMatrix(matrix2);
+    rodTransform->setMatrix(matrix);
+
+    plotXYModel.push_back(result[0]);
+    plotVxYModel.push_back(result[1]);
+    plotFiYModel.push_back(MainWindow::to_degrees(result[2]));
+    plotOmegaFiYModel.push_back(MainWindow::to_degrees(result[3]));
+
     if (serial->open(QIODevice::ReadWrite)) {
         if (serial->waitForReadyRead(50)) {  // Ожидание данных 1 секунды
             QByteArray data = serial->readAll();
@@ -729,26 +766,38 @@ void MainWindow::timerStend_slot(){
             T += 0.1;
 
             plot1->addGraph();
+            plot1->addGraph();
             plot1->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
             plot1->graph(0)->addData(plotTime, plotXY);
+            plot1->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
+            plot1->graph(1)->addData(plotTime, plotXYModel);
             plot1->yAxis->setRange(plotXSize.first, plotXSize.second);
             plot1->replot();
 
             plot2->addGraph();
+            plot2->addGraph();
             plot2->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
             plot2->graph(0)->addData(plotTime, plotVxY);
+            plot2->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
+            plot2->graph(1)->addData(plotTime, plotVxYModel);
             plot2->yAxis->setRange(plotVxSize.first, plotVxSize.second);
             plot2->replot();
 
             plot3->addGraph();
+            plot3->addGraph();
             plot3->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
             plot3->graph(0)->addData(plotTime, plotFiY);
+            plot3->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
+            plot3->graph(1)->addData(plotTime, plotFiYModel);
             plot3->yAxis->setRange(plotFiSize.first, plotFiSize.second);
             plot3->replot();
 
             plot4->addGraph();
+            plot4->addGraph();
             plot4->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
             plot4->graph(0)->addData(plotTime, plotOmegaFiY);
+            plot4->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
+            plot4->graph(1)->addData(plotTime, plotOmegaFiYModel);
             plot4->yAxis->setRange(plotOmegaFiSize.first, plotOmegaFiSize.second);
             plot4->replot();
         } else {
@@ -768,6 +817,7 @@ void MainWindow::timerStend_slot(){
         );
         timerStend->stop();
     }
+
 }
 
 void MainWindow::timer_slot(){
