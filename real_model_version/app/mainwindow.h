@@ -116,6 +116,9 @@ private:
     QComboBox *stopBitsComboBox;
     QComboBox *flowControlComboBox;
 
+    QPushButton *sendToStmButton;
+    QLineEdit * sendToStmButtonEdit;
+
     QTextEdit *logsEdit;
 
     QStackedLayout *menuStackedLayout;

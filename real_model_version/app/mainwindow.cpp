@@ -27,6 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
     QFont axisFont("Arial", 20);
     penSize = 5;
     localPath = "C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app";
+    localPath = "C:/Users/baben/programming/bmstu/Ticker/real_model_version/app";
 
     serial = new QSerialPort(this);
 
@@ -251,6 +252,7 @@ MainWindow::MainWindow(QWidget *parent)
     labelParity = new QLabel("Parity");
     labelStopBits = new QLabel("Stop Bits");
     labelFlowControl = new QLabel("Flow Control");
+    sendToStmButton = new QPushButton("Отправить на STM");
 
     for (QLabel* label: {labePort, labelBaudRate, labelDataBits,
          labelParity, labelStopBits, labelFlowControl}){
@@ -259,6 +261,8 @@ MainWindow::MainWindow(QWidget *parent)
         labelsStendLayout1->addWidget(label);
         labelsStendLayout1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     }
+    labelsStendLayout1 -> addWidget(sendToStmButton);
+    labelsStendLayout1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     portComboBox = new QComboBox();
 
@@ -294,6 +298,8 @@ MainWindow::MainWindow(QWidget *parent)
     flowControlComboBox->addItem("None");
     flowControlComboBox->addItem("");
 
+    sendToStmButtonEdit = new QLineEdit();
+
     for (QComboBox* box: {portComboBox, baudRateComboBox, dataBitsComboBox,
              parityComboBox, stopBitsComboBox, flowControlComboBox}){
         box->setFont(labelFont);
@@ -302,6 +308,9 @@ MainWindow::MainWindow(QWidget *parent)
         boxStendLayout1->addWidget(box);
         boxStendLayout1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     }
+
+    boxStendLayout1->addWidget(sendToStmButtonEdit);
+    boxStendLayout1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     hStendLayout1->addLayout(labelsStendLayout1);
     hStendLayout1->addLayout(boxStendLayout1);
@@ -509,7 +518,7 @@ const double l_max = 0.3;
 bool isFirstReadFlag = true;
 bool isConnected = false;
 
-QVector<double> values = MainWindow::readIni("C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app", "Base");
+QVector<double> values = MainWindow::readIni("C:/Users/baben/programming/bmstu/Ticker/real_model_version/app", "Base");
 QVector<double> constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
 QVector<double> val = {values[9], values[10], values[11], values[12]};
 
