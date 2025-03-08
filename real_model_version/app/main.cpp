@@ -39,7 +39,9 @@ void MainWindow::modifiIni(QString path, QVector<double> values) {
     sett.setValue("Modified/W", values[12]);
 }
 
-void MainWindow::writeToOutput(QString path, const QVector<double>& v1, const QVector<double>& v2, const QVector<double>& v3, const QVector<double>& v4, const QVector<double>& v5){
+void MainWindow::writeToOutput(QString path, const QVector<double>& v1, const QVector<double>& v2, const QVector<double>& v3, const QVector<double>& v4, const QVector<double>& v5){    
+    QString fileName = QDateTime::currentDateTime().toString("yyyy_MM_dd_HH_mm_ss") + ".csv";
+    path = path + "values_" + fileName;
     QFile file(path);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         qDebug() << "Cannot open file for writing: " << file.errorString();
@@ -47,20 +49,24 @@ void MainWindow::writeToOutput(QString path, const QVector<double>& v1, const QV
     }
 
     QTextStream out(&file);
+    // Запись BOM для корректного отображения в Excel
+    file.write("\xEF\xBB\xBF");
+
+    // Заголовки столбцов
+    out << "Time,X,Vx,Fi,OmegaFiY\n";
+
+    // Запись данных
     int length = v1.size();
-
-    out << "Time   X   Vx   Fi   OmegaFiY\n";
-
     for (int i = 0; i < length; ++i) {
-        out << v1[i] << "  "
-            << v2[i] << "  "
-            << v3[i] << "  "
-            << v4[i] << "  "
-            << v5[i] << "\n";
+        out << QString::number(v1[i], 'f', 5) << ","
+            << QString::number(v2[i], 'f', 5) << ","
+            << QString::number(v3[i], 'f', 5) << ","
+            << QString::number(v4[i], 'f', 5) << ","
+            << QString::number(v5[i], 'f', 5) << "\n";
     }
 
     file.close();
-    qDebug() << "Data written to file successfully.";
+    qDebug() << "Data written to file successfully: " << path;
 }
 
 //Функция суммирования векторов

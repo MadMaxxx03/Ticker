@@ -2,10 +2,12 @@
 #include <QHBoxLayout>
 #include <QSpacerItem>
 #include <QGroupBox>
+#include <QApplication>
 
 ExtraParamsDialog::ExtraParamsDialog(QWidget *parent) : QDialog(parent)
 {
-    QFont labelFont("Arial", 10); // Настройка шрифта
+    QFont labelFont = QApplication::font();
+    labelFont.setPointSize(10);
 
     // Управление
     QHBoxLayout *controlНLayout = new QHBoxLayout;
@@ -61,61 +63,6 @@ ExtraParamsDialog::ExtraParamsDialog(QWidget *parent) : QDialog(parent)
     QGroupBox *controlGroup = new QGroupBox("Управление");
     controlGroup->setLayout(controLayout);
 
-    // Наблюдатель
-    QHBoxLayout *observerНLayout = new QHBoxLayout;
-    QVBoxLayout *observerLVLayout = new QVBoxLayout;
-    QVBoxLayout *observerEVLayout = new QVBoxLayout;
-    QHBoxLayout *observerMenuLayout = new QHBoxLayout;
-    QVBoxLayout *observerLayout = new QVBoxLayout;
-
-    labelObserverType = new QLabel("Вид");
-    labelObserverType->setFont(labelFont);
-    labelObserverParam1 = new QLabel("Параметр 1");
-    labelObserverParam1->setFont(labelFont);
-    labelObserverParam2 = new QLabel("Параметр 2");
-    labelObserverParam2->setFont(labelFont);
-
-    observerMenuLayout->addWidget(labelObserverType);
-
-    observerLVLayout->addWidget(labelObserverParam1);
-    observerLVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
-    observerLVLayout->addWidget(labelObserverParam2);
-
-    observerComboBox = new QComboBox();
-    observerComboBox->setFont(labelFont);
-    observerComboBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    observerComboBox->setMaximumWidth(300);
-    observerComboBox->addItem("Без наблюдателя");
-    observerComboBox->addItem("Наблюдатель с большим коэффициентом усиления");
-    observerComboBox->addItem("Наблюдатель Калмана");
-    observerComboBox->addItem("Адаптивный наблюдатель");
-    observerComboBox->addItem("Нелинейный наблюдатель");
-
-    editObserverParam1 = new QLineEdit;
-    editObserverParam1->setFont(labelFont);
-    editObserverParam1->setMaximumWidth(120);
-    editObserverParam1->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    editObserverParam2 = new QLineEdit;
-    editObserverParam2->setMaximumWidth(120);
-    editObserverParam2->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    editObserverParam2->setFont(labelFont);
-
-    observerMenuLayout->addWidget(observerComboBox);
-    observerMenuLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
-
-    observerEVLayout->addWidget(editObserverParam1);
-    observerEVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
-    observerEVLayout->addWidget(editObserverParam2);
-
-    observerНLayout->addLayout(observerLVLayout);
-    observerНLayout->addLayout(observerEVLayout);
-
-    observerLayout->addLayout(observerMenuLayout);
-    observerLayout->addLayout(observerНLayout);
-
-    QGroupBox *observerGroup = new QGroupBox("Наблюдатель");
-    observerGroup->setLayout(observerLayout);
-
     // Кнопка "Сохранить"
     saveButton = new QPushButton("Сохранить");
     connect(saveButton, &QPushButton::clicked, this, &QDialog::accept);
@@ -123,7 +70,6 @@ ExtraParamsDialog::ExtraParamsDialog(QWidget *parent) : QDialog(parent)
     // Основной макет
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addWidget(controlGroup);
-    mainLayout->addWidget(observerGroup);
     mainLayout->addWidget(saveButton);
 
     setLayout(mainLayout);

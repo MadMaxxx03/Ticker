@@ -23,10 +23,15 @@ MainWindow::MainWindow(QWidget *parent)
     //penSize = 3;
     //localPath = "C:/Ticker/real_model_version/app";
 
-    QFont labelFont("Times", 15);
-    QFont axisFont("Arial", 20);
-    penSize = 5;
-    localPath = "C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app";
+    QFont labelFont = QApplication::font();
+    labelFont.setPointSize(10);
+
+    QFont axisFont= QApplication::font();
+    axisFont.setPointSize(12);
+    axisFont.setWeight(QFont::Weight::Medium);
+
+    penSize = 4;
+    //localPath = "C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app";
     localPath = "C:/Users/baben/programming/bmstu/Ticker/real_model_version/app";
 
     serial = new QSerialPort(this);
@@ -93,12 +98,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     fields = {editm1, editm2, editm3, editl, editFf, editFr, editFc, editb2, editk2, editX, editV, editFi, editW};
 
-    extraParamsStendButton = new QPushButton("Управление и наблюдатель");
+    extraParamsStendButton = new QPushButton("Выбор управления");
     extraParamsStendButton->setFixedHeight(40);
     extraParamsStendButton->setFont(labelFont);
     connect(extraParamsStendButton, &QPushButton::clicked, this, &MainWindow::on_extraParamsButton_clicked);
 
-    extraParamsButton = new QPushButton("Управление и наблюдатель");
+    extraParamsButton = new QPushButton("Выбор управления");
     extraParamsButton->setFixedHeight(40);
     extraParamsButton->setFont(labelFont);
     connect(extraParamsButton, &QPushButton::clicked, this, &MainWindow::on_extraParamsButton_clicked);
@@ -716,8 +721,7 @@ void MainWindow::on_connectButton_clicked(){
 }
 
 void MainWindow::on_writeButton_clicked(){
-    writeToOutput(localPath + "/output.txt",
-                  plotTime, plotXY, plotVxY, plotFiY, plotOmegaFiY);
+    writeToOutput(localPath + "/", plotTime, plotXY, plotVxY, plotFiY, plotOmegaFiY);
 }
 
 void MainWindow::timerStend_slot(){
