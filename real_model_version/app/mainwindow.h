@@ -66,6 +66,8 @@ private slots:
     void onStendClicked();
     void timer_slot();
     void timerStend_slot();
+    void updatePlots();
+
 
 public:
     static QVector<double> readIni(QString path, QString category);
@@ -84,6 +86,9 @@ public:
 private:
     Ui::MainWindow *ui;
     SecondWindow *secondWindow;
+
+    QCheckBox *checkBoxPendulum;
+    QCheckBox *checkBoxModel;
 
     QTimer *timer;
     QTimer *timerStend;

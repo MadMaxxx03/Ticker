@@ -18,11 +18,6 @@ MainWindow::MainWindow(QWidget *parent)
     timerStend = new QTimer(this);
     connect(timerStend, SIGNAL(timeout()), this, SLOT(timerStend_slot()));
 
-    //QFont labelFont("Times", 8);
-    //QFont axisFont("Arial", 10);
-    //penSize = 3;
-    //localPath = "C:/Ticker/real_model_version/app";
-
     QFont labelFont = QApplication::font();
     labelFont.setPointSize(10);
 
@@ -31,8 +26,6 @@ MainWindow::MainWindow(QWidget *parent)
     axisFont.setWeight(QFont::Weight::Medium);
 
     penSize = 4;
-    //localPath = "C:/Users/baben_bakg1j1/Programming/C++/Ticker/real_model_version/app";
-    localPath = "C:/Users/baben/programming/bmstu/Ticker/real_model_version/app";
 
     serial = new QSerialPort(this);
 
@@ -317,9 +310,24 @@ MainWindow::MainWindow(QWidget *parent)
     boxStendLayout1->addWidget(sendToStmButtonEdit);
     boxStendLayout1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
+    // Создаем чекбоксы
+    checkBoxModel = new QCheckBox("Математическая модель");
+    checkBoxModel->setChecked(true);
+    checkBoxPendulum = new QCheckBox("Маятник");
+    checkBoxPendulum->setChecked(true);
+
+    // Размещаем чекбоксы в QHBoxLayout
+    QHBoxLayout *checkBoxLayout = new QHBoxLayout;
+    checkBoxLayout->addWidget(checkBoxModel);
+    checkBoxLayout->addWidget(checkBoxPendulum);
+
+    connect(checkBoxModel, &QCheckBox::stateChanged, this, &MainWindow::updatePlots);
+    connect(checkBoxPendulum, &QCheckBox::stateChanged, this, &MainWindow::updatePlots);
+
     hStendLayout1->addLayout(labelsStendLayout1);
     hStendLayout1->addLayout(boxStendLayout1);
     stendLayout->addLayout(hStendLayout1);
+    stendLayout->addLayout(checkBoxLayout);
     stendLayout->addSpacing(15);
     stendLayout->addLayout(hStendLayoutText);
     stendLayout->addSpacing(15);
@@ -457,7 +465,7 @@ MainWindow::MainWindow(QWidget *parent)
     cartTransform->setTranslation(QVector3D(0.0f, 0.0f, 0.0f));
     cartEntity->addComponent(cartTransform);
 
-    QVector<double> values = MainWindow::readIni(localPath + "/values.ini", "Base");
+    QVector<double> values = MainWindow::readIni("/app/values.ini", "Base");
     for (int i = 0; i < fields.size(); i++) {
             fields[i]->setText(QString::number(values[i]));
             fields[i]->setFont(labelFont);
@@ -523,7 +531,7 @@ const double l_max = 0.3;
 bool isFirstReadFlag = true;
 bool isConnected = false;
 
-QVector<double> values = MainWindow::readIni("C:/Users/baben/programming/bmstu/Ticker/real_model_version/app", "Base");
+QVector<double> values = MainWindow::readIni("/app/values.ini", "Base");
 QVector<double> constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
 QVector<double> val = {values[9], values[10], values[11], values[12]};
 
@@ -560,15 +568,15 @@ void MainWindow::on_saveButton_clicked(){
     }
 
     if (isAllOk)
-        modifiIni(localPath + "/values.ini", newValues);
+        modifiIni("/app/values.ini", newValues);
 }
 
 void MainWindow::on_startButton_clicked(){
     if (isFirstReadFlag){
-        modifiIni(localPath + "/values.ini", values);
+        modifiIni("/app/values.ini", values);
         isFirstReadFlag = false;
     }
-    values = MainWindow::readIni(localPath + "/values.ini", "Modified");
+    values = MainWindow::readIni("/app/values.ini", "Modified");
     constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
     val = {values[9], values[10], values[11], values[12]};
     result = MainWindow::rungeKutta(0, 1, 100, val, constants);
@@ -615,6 +623,7 @@ void MainWindow::on_extraParamsButton_clicked(){
 }
 
 void MainWindow::on_connectButton_clicked(){
+
     // Считывание выбранного порта
     QString selectedPort = portComboBox->currentText();
     serial->setPortName(selectedPort);
@@ -698,10 +707,10 @@ void MainWindow::on_connectButton_clicked(){
             connectButton->setText("Отключиться");
 
             if (isFirstReadFlag){
-                modifiIni(localPath + "/values.ini", values);
+                modifiIni("/app/values.ini", values);
                 isFirstReadFlag = false;
             }
-            values = MainWindow::readIni(localPath + "/values.ini", "Modified");
+            values = MainWindow::readIni("/app/values.ini", "Modified");
             constants = {values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8]};
             val = {values[9], values[10], values[11], values[12]};
             result = MainWindow::rungeKutta(0, 1, 100, val, constants);
@@ -711,6 +720,39 @@ void MainWindow::on_connectButton_clicked(){
             plotFiYModel.clear();
             plotOmegaFiYModel.clear();
 
+            // Инициализация графиков
+            plot1->addGraph();
+            plot1->addGraph();
+            plot1->graph(0)->setName("Математическая модель");
+            plot1->graph(1)->setName("Маятник");
+            plot1->legend->setVisible(true);
+            plot1->legend->setBrush(QBrush(QColor(255, 255, 255, 150)));
+            plot1->legend->setBorderPen(QPen(Qt::black));
+
+            plot2->addGraph();
+            plot2->addGraph();
+            plot2->graph(0)->setName("Математическая модель");
+            plot2->graph(1)->setName("Маятник");
+            plot2->legend->setVisible(true);
+            plot2->legend->setBrush(QBrush(QColor(255, 255, 255, 150)));
+            plot2->legend->setBorderPen(QPen(Qt::black));
+
+
+            plot3->addGraph();
+            plot3->addGraph();
+            plot3->graph(0)->setName("Математическая модель");
+            plot3->graph(1)->setName("Маятник");
+            plot3->legend->setVisible(true);
+            plot3->legend->setBrush(QBrush(QColor(255, 255, 255, 150)));
+            plot3->legend->setBorderPen(QPen(Qt::black));
+
+            plot4->addGraph();
+            plot4->addGraph();
+            plot4->graph(0)->setName("Математическая модель");
+            plot4->graph(1)->setName("Маятник");
+            plot4->legend->setVisible(true);
+            plot4->legend->setBrush(QBrush(QColor(255, 255, 255, 150)));
+            plot4->legend->setBorderPen(QPen(Qt::black));
             timerStend->start(100);
 
         } else {
@@ -721,7 +763,7 @@ void MainWindow::on_connectButton_clicked(){
 }
 
 void MainWindow::on_writeButton_clicked(){
-    writeToOutput(localPath + "/", plotTime, plotXY, plotVxY, plotFiY, plotOmegaFiY);
+    writeToOutput("/", plotTime, plotXY, plotVxY, plotFiY, plotOmegaFiY);
 }
 
 void MainWindow::timerStend_slot(){
@@ -760,9 +802,9 @@ void MainWindow::timerStend_slot(){
             plotOmegaFiY.push_back(MainWindow::to_degrees(valuesSerial[3]));
 
             //Убирает задержку в работе
-            for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
-                plot->clearGraphs();
-            }
+            //for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
+            //    plot->clearGraphs();
+            //}
 
             if (T > plotTSize * 0.9){
                 plotTSize = plotTSize * 1.5;
@@ -778,41 +820,11 @@ void MainWindow::timerStend_slot(){
 
             T += 0.1;
 
-            plot1->addGraph();
-            plot1->addGraph();
-            plot1->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
-            plot1->graph(0)->addData(plotTime, plotXY);
-            plot1->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
-            plot1->graph(1)->addData(plotTime, plotXYModel);
-            plot1->yAxis->setRange(plotXSize.first, plotXSize.second);
-            plot1->replot();
+            //Графики
 
-            plot2->addGraph();
-            plot2->addGraph();
-            plot2->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
-            plot2->graph(0)->addData(plotTime, plotVxY);
-            plot2->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
-            plot2->graph(1)->addData(plotTime, plotVxYModel);
-            plot2->yAxis->setRange(plotVxSize.first, plotVxSize.second);
-            plot2->replot();
+            updatePlots();
 
-            plot3->addGraph();
-            plot3->addGraph();
-            plot3->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
-            plot3->graph(0)->addData(plotTime, plotFiY);
-            plot3->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
-            plot3->graph(1)->addData(plotTime, plotFiYModel);
-            plot3->yAxis->setRange(plotFiSize.first, plotFiSize.second);
-            plot3->replot();
 
-            plot4->addGraph();
-            plot4->addGraph();
-            plot4->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
-            plot4->graph(0)->addData(plotTime, plotOmegaFiY);
-            plot4->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
-            plot4->graph(1)->addData(plotTime, plotOmegaFiYModel);
-            plot4->yAxis->setRange(plotOmegaFiSize.first, plotOmegaFiSize.second);
-            plot4->replot();
         } else {
             logsEdit->append("No data received within the timeout.");
         }
@@ -878,25 +890,100 @@ void MainWindow::timer_slot(){
 
     plot1->addGraph();
     plot1->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
+    plot1->graph(0)->setName("Математическая модель");
     plot1->graph(0)->addData(plotTime, plotXY);
     plot1->yAxis->setRange(plotXSize.first, plotXSize.second);
+    plot1->legend->setVisible(true);
+    plot1->legend->setBrush(QBrush(QColor(255, 255, 255, 150)));
+    plot1->legend->setBorderPen(QPen(Qt::black));
     plot1->replot();
 
     plot2->addGraph();
     plot2->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
+    plot2->graph(0)->setName("Математическая модель");
     plot2->graph(0)->addData(plotTime, plotVxY);
     plot2->yAxis->setRange(plotVxSize.first, plotVxSize.second);
+    plot2->legend->setVisible(true);
+    plot2->legend->setBrush(QBrush(QColor(255, 255, 255, 150)));
+    plot2->legend->setBorderPen(QPen(Qt::black));
     plot2->replot();
 
     plot3->addGraph();
     plot3->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
+    plot3->graph(0)->setName("Математическая модель");
     plot3->graph(0)->addData(plotTime, plotFiY);
+    plot3->yAxis->setRange(plotFiSize.first, plotFiSize.second);
+    plot3->legend->setVisible(true);
+    plot3->legend->setBrush(QBrush(QColor(255, 255, 255, 150)));
+    plot3->legend->setBorderPen(QPen(Qt::black));
+    plot3->replot();
+
+    // Настройка plot4
+    plot4->addGraph();
+    plot4->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
+    plot4->graph(0)->setName("Математическая модель");
+    plot4->graph(0)->addData(plotTime, plotOmegaFiY);
+    plot4->yAxis->setRange(plotOmegaFiSize.first, plotOmegaFiSize.second);
+    plot4->legend->setVisible(true);
+    plot4->legend->setBrush(QBrush(QColor(255, 255, 255, 150)));
+    plot4->legend->setBorderPen(QPen(Qt::black));
+    plot4->replot();
+}
+
+void MainWindow::updatePlots() {
+    // Обновляем plot1
+    plot1->graph(0)->data()->clear();
+    plot1->graph(1)->data()->clear();
+    if (checkBoxModel->isChecked()) {
+        plot1->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
+        plot1->graph(0)->addData(plotTime, plotXY);
+    }
+    if (checkBoxPendulum->isChecked()) {
+        plot1->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
+        plot1->graph(1)->addData(plotTime, plotXYModel);
+    }
+    plot1->yAxis->setRange(plotXSize.first, plotXSize.second);
+    plot1->replot();
+
+    // Обновляем plot2
+    plot2->graph(0)->data()->clear();
+    plot2->graph(1)->data()->clear();
+    if (checkBoxModel->isChecked()) {
+        plot2->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
+        plot2->graph(0)->addData(plotTime, plotVxY);
+    }
+    if (checkBoxPendulum->isChecked()) {
+        plot2->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
+        plot2->graph(1)->addData(plotTime, plotVxYModel);
+    }
+    plot2->yAxis->setRange(plotVxSize.first, plotVxSize.second);
+    plot2->replot();
+
+    // Обновляем plot3
+    plot3->graph(0)->data()->clear();
+    plot3->graph(1)->data()->clear();
+    if (checkBoxModel->isChecked()) {
+        plot3->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
+        plot3->graph(0)->addData(plotTime, plotFiY);
+    }
+    if (checkBoxPendulum->isChecked()) {
+        plot3->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
+        plot3->graph(1)->addData(plotTime, plotFiYModel);
+    }
     plot3->yAxis->setRange(plotFiSize.first, plotFiSize.second);
     plot3->replot();
 
-    plot4->addGraph();
-    plot4->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
-    plot4->graph(0)->addData(plotTime, plotOmegaFiY);
+    // Обновляем plot4
+    plot4->graph(0)->data()->clear();
+    plot4->graph(1)->data()->clear();
+    if (checkBoxModel->isChecked()) {
+        plot4->graph(0)->setPen(QPen(QColor(0, 0, 255), penSize));
+        plot4->graph(0)->addData(plotTime, plotOmegaFiY);
+    }
+    if (checkBoxPendulum->isChecked()) {
+        plot4->graph(1)->setPen(QPen(QColor(255, 165, 0), penSize));
+        plot4->graph(1)->addData(plotTime, plotOmegaFiYModel);
+    }
     plot4->yAxis->setRange(plotOmegaFiSize.first, plotOmegaFiSize.second);
     plot4->replot();
 }

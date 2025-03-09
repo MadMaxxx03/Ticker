@@ -3,7 +3,16 @@ using namespace std;
 
 //Считывание начальных значений
 QVector<double> MainWindow::readIni(QString path, QString category){
-    QSettings sett(path, QSettings::IniFormat);
+    QString appDir = QCoreApplication::applicationDirPath();
+    QDir dir(appDir);
+
+    // Переходим на уровень выше (из build/debug или build/release в build)
+    if (dir.dirName() == "debug" || dir.dirName() == "release") {
+        dir.cdUp(); // Переходим в родительскую директорию (build)
+    }
+    dir.cdUp();
+
+    QSettings sett(dir.absolutePath() + path, QSettings::IniFormat);
     QVector<double> values;
     values << sett.value(category + "/m1", 0.0).toDouble()
            << sett.value(category + "/m2", 0.0).toDouble()
@@ -23,7 +32,16 @@ QVector<double> MainWindow::readIni(QString path, QString category){
 
 //Изменение начальных значений
 void MainWindow::modifiIni(QString path, QVector<double> values) {
-    QSettings sett(path, QSettings::IniFormat);
+    QString appDir = QCoreApplication::applicationDirPath();
+    QDir dir(appDir);
+
+    // Переходим на уровень выше (из build/debug или build/release в build)
+    if (dir.dirName() == "debug" || dir.dirName() == "release") {
+        dir.cdUp(); // Переходим в родительскую директорию (build)
+    }
+    dir.cdUp();
+
+    QSettings sett(dir.absolutePath() + path, QSettings::IniFormat);
     sett.setValue("Modified/m1", values[0]);
     sett.setValue("Modified/m2", values[1]);
     sett.setValue("Modified/m3", values[2]);
@@ -39,9 +57,18 @@ void MainWindow::modifiIni(QString path, QVector<double> values) {
     sett.setValue("Modified/W", values[12]);
 }
 
-void MainWindow::writeToOutput(QString path, const QVector<double>& v1, const QVector<double>& v2, const QVector<double>& v3, const QVector<double>& v4, const QVector<double>& v5){    
+void MainWindow::writeToOutput(QString path, const QVector<double>& v1, const QVector<double>& v2, const QVector<double>& v3, const QVector<double>& v4, const QVector<double>& v5){
+    QString appDir = QCoreApplication::applicationDirPath();
+    QDir dir(appDir);
+
+    // Переходим на уровень выше (из build/debug или build/release в build)
+    if (dir.dirName() == "debug" || dir.dirName() == "release") {
+        dir.cdUp(); // Переходим в родительскую директорию (build)
+    }
+    dir.cdUp();
+
     QString fileName = QDateTime::currentDateTime().toString("yyyy_MM_dd_HH_mm_ss") + ".csv";
-    path = path + "values_" + fileName;
+    path = dir.absolutePath() + path + "values_" + fileName;
     QFile file(path);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         qDebug() << "Cannot open file for writing: " << file.errorString();
