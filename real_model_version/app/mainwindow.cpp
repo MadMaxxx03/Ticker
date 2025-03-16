@@ -251,6 +251,8 @@ MainWindow::MainWindow(QWidget *parent)
     labelStopBits = new QLabel("Stop Bits");
     labelFlowControl = new QLabel("Flow Control");
     sendToStmButton = new QPushButton("Отправить на STM");
+    connect(sendToStmButton, &QPushButton::clicked, this, &MainWindow::on_sendToStmButton_clicked);
+
 
     for (QLabel* label: {labePort, labelBaudRate, labelDataBits,
          labelParity, labelStopBits, labelFlowControl}){
@@ -624,39 +626,10 @@ void MainWindow::on_extraParamsButton_clicked(){
 
 void MainWindow::on_connectButton_clicked(){
 
-    // Считывание выбранного порта
-    QString selectedPort = portComboBox->currentText();
-    serial->setPortName(selectedPort);
-
-    // Считывание выбранной скорости передачи данных
-    int selectedBaudRate = baudRateComboBox->currentText().toInt();
-    serial->setBaudRate(static_cast<QSerialPort::BaudRate>(selectedBaudRate));
-
-    // Считывание количества бит данных
-    int selectedDataBits = dataBitsComboBox->currentText().toInt();
-    serial->setDataBits(static_cast<QSerialPort::DataBits>(selectedDataBits));
-
-    // Считывание четности
-    QString selectedParity = parityComboBox->currentText();
-    if (selectedParity == "None") {
-        serial->setParity(QSerialPort::NoParity);
-    } else {}
-
-    // Считывание стоп-битов
-    QString selectedStopBits = stopBitsComboBox->currentText();
-    if (selectedStopBits == "1") {
-        serial->setStopBits(QSerialPort::OneStop);
-    } else {}
-
-    // Считывание управления потоком
-    QString selectedFlowControl = flowControlComboBox->currentText();
-    if (selectedFlowControl == "None") {
-        serial->setFlowControl(QSerialPort::NoFlowControl);
-    } else {}
-
     if (isConnected){
         timerStend->stop();
         isConnected = false;
+        serial->close();
         connectButton->setText("Подключиться");
         indicator->setStyleSheet(
             "QRadioButton::indicator {"
@@ -668,6 +641,36 @@ void MainWindow::on_connectButton_clicked(){
         );
     }
     else{
+        // Считывание выбранного порта
+        QString selectedPort = portComboBox->currentText();
+        serial->setPortName(selectedPort);
+
+        // Считывание выбранной скорости передачи данных
+        int selectedBaudRate = baudRateComboBox->currentText().toInt();
+        serial->setBaudRate(static_cast<QSerialPort::BaudRate>(selectedBaudRate));
+
+        // Считывание количества бит данных
+        int selectedDataBits = dataBitsComboBox->currentText().toInt();
+        serial->setDataBits(static_cast<QSerialPort::DataBits>(selectedDataBits));
+
+        // Считывание четности
+        QString selectedParity = parityComboBox->currentText();
+        if (selectedParity == "None") {
+            serial->setParity(QSerialPort::NoParity);
+        } else {}
+
+        // Считывание стоп-битов
+        QString selectedStopBits = stopBitsComboBox->currentText();
+        if (selectedStopBits == "1") {
+            serial->setStopBits(QSerialPort::OneStop);
+        } else {}
+
+        // Считывание управления потоком
+        QString selectedFlowControl = flowControlComboBox->currentText();
+        if (selectedFlowControl == "None") {
+            serial->setFlowControl(QSerialPort::NoFlowControl);
+        } else {}
+
         if (serial->open(QIODevice::ReadWrite)) {
             logsEdit->append("Serial port opened successfully!");
             if (serial->waitForReadyRead(3000)) {  // Ожидание данных 3 секунды
@@ -843,6 +846,74 @@ void MainWindow::timerStend_slot(){
         timerStend->stop();
     }
 
+}
+
+void MainWindow::on_sendToStmButton_clicked() {
+    // Получаем текст из QLineEdit
+    QString text = sendToStmButtonEdit->text();
+
+    // Проверяем, является ли текст числом (int или double)
+    bool isNumber;
+    double number = text.toDouble(&isNumber);
+
+    if (!isNumber) {
+        // Если текст не является числом, подсвечиваем QLineEdit красным
+        sendToStmButtonEdit->setStyleSheet("QLineEdit { background-color: red; }");
+        logsEdit->append("Ошибка: Введённое значение не является числом.");
+        return;
+    } else {
+        // Если текст является числом, сбрасываем подсветку
+        sendToStmButtonEdit->setStyleSheet("");
+    }
+
+    // Проверяем, подключены ли мы к STM
+    if (!isConnected) {
+        // Если не подключены, пытаемся подключиться
+        QString selectedPort = portComboBox->currentText();
+        serial->setPortName(selectedPort);
+
+        int selectedBaudRate = baudRateComboBox->currentText().toInt();
+        serial->setBaudRate(static_cast<QSerialPort::BaudRate>(selectedBaudRate));
+
+        int selectedDataBits = dataBitsComboBox->currentText().toInt();
+        serial->setDataBits(static_cast<QSerialPort::DataBits>(selectedDataBits));
+
+        QString selectedParity = parityComboBox->currentText();
+        if (selectedParity == "None") {
+            serial->setParity(QSerialPort::NoParity);
+        }
+
+        QString selectedStopBits = stopBitsComboBox->currentText();
+        if (selectedStopBits == "1") {
+            serial->setStopBits(QSerialPort::OneStop);
+        }
+
+        QString selectedFlowControl = flowControlComboBox->currentText();
+        if (selectedFlowControl == "None") {
+            serial->setFlowControl(QSerialPort::NoFlowControl);
+        }
+
+        // Пытаемся открыть порт
+        if (serial->open(QIODevice::ReadWrite)) {
+            isConnected = true;
+            logsEdit->append("Подключение к порту " + selectedPort + " успешно установлено.");
+        } else {
+            // Если не удалось открыть порт, выводим сообщение об ошибке
+            logsEdit->append("Ошибка: Не удалось открыть порт " + selectedPort + ": " + serial->errorString());
+            return;
+        }
+    }
+
+    // Если подключение успешно, отправляем число на STM
+    QByteArray data = QByteArray::number(number);
+    if (serial->write(data) == -1) {
+        if (!serial->isOpen()) {
+            logsEdit->append("Ошибка: Порт не открыт.");
+        }
+        logsEdit->append("Ошибка: Не удалось отправить данные: " + serial->errorString());
+    } else {
+        logsEdit->append("Данные успешно отправлены: " + QString::number(number));
+    }
 }
 
 void MainWindow::timer_slot(){

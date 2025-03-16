@@ -67,7 +67,7 @@ private slots:
     void timer_slot();
     void timerStend_slot();
     void updatePlots();
-
+    void on_sendToStmButton_clicked();
 
 public:
     static QVector<double> readIni(QString path, QString category);
