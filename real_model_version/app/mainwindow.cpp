@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(modelingAction, &QAction::triggered, this, &MainWindow::onSimulationClicked);
     fileMenu->addAction(modelingAction);
 
-    stendAction = new QAction("Сненд", this);
+    stendAction = new QAction("Стенд", this);
     connect(stendAction, &QAction::triggered, this, &MainWindow::onStendClicked);
     fileMenu->addAction(stendAction);
 

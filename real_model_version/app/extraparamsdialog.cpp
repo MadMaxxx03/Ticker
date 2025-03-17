@@ -1,77 +1,139 @@
 #include "extraparamsdialog.h"
 #include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QSpacerItem>
 #include <QGroupBox>
 #include <QApplication>
+#include <QSettings>
+#include <QDoubleValidator>
 
 ExtraParamsDialog::ExtraParamsDialog(QWidget *parent) : QDialog(parent)
 {
     QFont labelFont = QApplication::font();
     labelFont.setPointSize(10);
 
-    // Управление
-    QHBoxLayout *controlНLayout = new QHBoxLayout;
-    QVBoxLayout *controlLVLayout = new QVBoxLayout;
-    QVBoxLayout *controlEVLayout = new QVBoxLayout;
-    QHBoxLayout *controlMenuLayout = new QHBoxLayout;
-    QVBoxLayout *controLayout = new QVBoxLayout;
+    QVBoxLayout *controlLayout = new QVBoxLayout;
 
     labelControlType = new QLabel("Вид");
     labelControlType->setFont(labelFont);
-    labelControlParam1 = new QLabel("Параметр 1");
-    labelControlParam1->setFont(labelFont);
-    labelControlParam2 = new QLabel("Параметр 2");
-    labelControlParam2->setFont(labelFont);
-
-    controlMenuLayout->addWidget(labelControlType);
-
-    controlLVLayout->addWidget(labelControlParam1);
-    controlLVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
-    controlLVLayout->addWidget(labelControlParam2);
-
     controlComboBox = new QComboBox();
     controlComboBox->setFont(labelFont);
-    controlComboBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    controlComboBox->setMaximumWidth(300);
-    controlComboBox->addItem("Sliding-mode");
-    controlComboBox->addItem("Back stepping");
-    controlComboBox->addItem("Адаптивное управление");
-    controlComboBox->addItem("Model Predictive Control");
+    controlComboBox->addItem("PID регулятор");
+    controlComboBox->addItem("Bang регулятор");
+    connect(controlComboBox, &QComboBox::currentIndexChanged, this, &ExtraParamsDialog::updateFields);
 
-    editControlParam1 = new QLineEdit;
-    editControlParam1->setFont(labelFont);
-    editControlParam1->setMaximumWidth(120);
-    editControlParam1->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    editControlParam2 = new QLineEdit;
-    editControlParam2->setMaximumWidth(120);
-    editControlParam2->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    editControlParam2->setFont(labelFont);
+    paramsLayout = new QGridLayout;
 
-    controlMenuLayout->addWidget(controlComboBox);
-    controlMenuLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    QStringList pidParams = {"Fi_P", "Fi_I", "Fi_D", "W_P", "W_I", "W_D",
+                             "X_P", "X_I", "X_D", "V_P", "V_I", "V_D"};
 
-    controlEVLayout->addWidget(editControlParam1);
-    controlEVLayout->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
-    controlEVLayout->addWidget(editControlParam2);
+    QDoubleValidator *doubleValidator = new QDoubleValidator(this);
 
-    controlНLayout->addLayout(controlLVLayout);
-    controlНLayout->addLayout(controlEVLayout);
+    for (const QString &param : pidParams) {
+        QLabel *label = new QLabel(param);
+        QLineEdit *edit = new QLineEdit;
+        edit->setValidator(doubleValidator);
+        label->setFont(labelFont);
+        edit->setFont(labelFont);
+        pidLabels.append(label);
+        pidEdits.append(edit);
+        paramsLayout->addWidget(label, paramsLayout->rowCount(), 0);
+        paramsLayout->addWidget(edit, paramsLayout->rowCount() - 1, 1);
+    }
 
-    controLayout->addLayout(controlMenuLayout);
-    controLayout->addLayout(controlНLayout);
+    bangLabelFi = new QLabel("Fi");
+    bangEditFi = new QLineEdit;
+    bangLabelPWM = new QLabel("PWM");
+    bangEditPWM = new QLineEdit;
 
-    QGroupBox *controlGroup = new QGroupBox("Управление");
-    controlGroup->setLayout(controLayout);
+    bangLabelFi->setFont(labelFont);
+    bangEditFi->setFont(labelFont);
+    bangLabelPWM->setFont(labelFont);
+    bangEditPWM->setFont(labelFont);
 
-    // Кнопка "Сохранить"
+    bangEditFi->setValidator(doubleValidator);
+    bangEditPWM->setValidator(doubleValidator);
+
+    paramsLayout->addWidget(bangLabelFi, 0, 0);
+    paramsLayout->addWidget(bangEditFi, 0, 1);
+    paramsLayout->addWidget(bangLabelPWM, 1, 0);
+    paramsLayout->addWidget(bangEditPWM, 1, 1);
+
     saveButton = new QPushButton("Сохранить");
-    connect(saveButton, &QPushButton::clicked, this, &QDialog::accept);
+    connect(saveButton, &QPushButton::clicked, this, &ExtraParamsDialog::saveSettings);
 
-    // Основной макет
-    QVBoxLayout *mainLayout = new QVBoxLayout;
-    mainLayout->addWidget(controlGroup);
-    mainLayout->addWidget(saveButton);
+    controlLayout->addWidget(labelControlType);
+    controlLayout->addWidget(controlComboBox);
+    controlLayout->addLayout(paramsLayout);
+    controlLayout->addWidget(saveButton);
 
-    setLayout(mainLayout);
+    setLayout(controlLayout);
     setWindowTitle("Параметры");
+
+    loadSettings();
+    updateFields(0);
+}
+
+void ExtraParamsDialog::updateFields(int index)
+{
+    bool isPID = (index == 0);
+
+    for (int i = 0; i < pidLabels.size(); ++i) {
+        pidLabels[i]->setVisible(isPID);
+        pidEdits[i]->setVisible(isPID);
+    }
+
+    bangLabelFi->setVisible(!isPID);
+    bangEditFi->setVisible(!isPID);
+    bangLabelPWM->setVisible(!isPID);
+    bangEditPWM->setVisible(!isPID);
+}
+
+void ExtraParamsDialog::loadSettings()
+{
+    QSettings settings("config.ini", QSettings::IniFormat);
+
+    for (int i = 0; i < pidEdits.size(); ++i) {
+        pidEdits[i]->setText(settings.value(pidLabels[i]->text(), "1.0").toString());
+    }
+
+    bangEditFi->setText(settings.value("Fi", "1.0").toString());
+    bangEditPWM->setText(settings.value("PWM", "1.0").toString());
+}
+
+void ExtraParamsDialog::saveSettings()
+{
+    QSettings settings("config.ini", QSettings::IniFormat);
+
+    bool hasError = false;
+
+    for (int i = 0; i < pidEdits.size(); ++i) {
+        if (pidEdits[i]->text().isEmpty()) {
+            pidEdits[i]->setStyleSheet("border: 2px solid red");
+            hasError = true;
+        } else {
+            settings.setValue(pidLabels[i]->text(), pidEdits[i]->text());
+            pidEdits[i]->setStyleSheet("");
+        }
+    }
+
+    if (bangEditFi->text().isEmpty()) {
+        bangEditFi->setStyleSheet("border: 2px solid red");
+        hasError = true;
+    } else {
+        settings.setValue("Fi", bangEditFi->text());
+        bangEditFi->setStyleSheet("");
+    }
+
+    if (bangEditPWM->text().isEmpty()) {
+        bangEditPWM->setStyleSheet("border: 2px solid red");
+        hasError = true;
+    } else {
+        settings.setValue("PWM", bangEditPWM->text());
+        bangEditPWM->setStyleSheet("");
+    }
+
+    if (!hasError) {
+        accept();
+    }
 }

@@ -7,6 +7,8 @@
 #include <QLineEdit>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include <QGridLayout>
+#include <QList>
 
 class ExtraParamsDialog : public QDialog
 {
@@ -15,20 +17,28 @@ class ExtraParamsDialog : public QDialog
 public:
     explicit ExtraParamsDialog(QWidget *parent = nullptr);
 
+private slots:
+    void updateFields(int index);
+    void loadSettings();
+    void saveSettings();
+
 private:
     QLabel *labelControlType;
-    QLabel *labelControlParam1;
-    QLabel *labelControlParam2;
-    QLabel *labelObserverType;
-    QLabel *labelObserverParam1;
-    QLabel *labelObserverParam2;
+
     QComboBox *controlComboBox;
-    QComboBox *observerComboBox;
-    QLineEdit *editControlParam1;
-    QLineEdit *editControlParam2;
-    QLineEdit *editObserverParam1;
-    QLineEdit *editObserverParam2;
+
     QPushButton *saveButton;
+
+    // Новые элементы для PID и Bang параметров
+    QList<QLabel*> pidLabels;
+    QList<QLineEdit*> pidEdits;
+
+    QLabel *bangLabelFi;
+    QLineEdit *bangEditFi;
+    QLabel *bangLabelPWM;
+    QLineEdit *bangEditPWM;
+
+    QGridLayout *paramsLayout;
 };
 
 #endif // EXTRAPARAMSDIALOG_H
