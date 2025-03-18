@@ -495,6 +495,8 @@ MainWindow::MainWindow(QWidget *parent)
         plot->yAxis->setRange(-1,1);
     }
 
+    resetModifiedSettings();  // Сброс данных из [Modified] в [Base]
+
     secondWindow->setWindowTitle("2D моделирование");
     secondWindow->resize(800, 600);
     secondWindow->show();
@@ -1058,4 +1060,43 @@ void MainWindow::updatePlots() {
     plot4->yAxis->setRange(plotOmegaFiSize.first, plotOmegaFiSize.second);
     plot4->replot();
 }
+
+void MainWindow::resetModifiedSettings()
+{
+    QString appDir = QCoreApplication::applicationDirPath();
+    QDir dir(appDir);
+
+    if (dir.dirName() == "debug" || dir.dirName() == "release") {
+        dir.cdUp();
+    }
+    dir.cdUp();
+
+    QString configPath = dir.absolutePath() + "/app/config.ini";
+
+    QSettings settings(configPath, QSettings::IniFormat);
+
+    // Очистка секции [Modified]
+    settings.beginGroup("Modified");
+    settings.remove("");
+    settings.endGroup();
+
+    // Копирование всех параметров из [Base] в [Modified]
+    settings.beginGroup("Base");
+    QStringList keys = settings.allKeys(); // Список всех ключей в [Base]
+    QMap<QString, QVariant> baseValues; // Сохраняем значения во временную структуру
+    for (const QString &key : keys) {
+        baseValues[key] = settings.value(key);  // Сохраняем значения в память
+    }
+    settings.endGroup();
+
+    // Запись значений в [Modified]
+    settings.beginGroup("Modified");
+    for (auto it = baseValues.begin(); it != baseValues.end(); ++it) {
+        settings.setValue(it.key(), it.value());  // Запись данных из сохраненной структуры
+    }
+    settings.endGroup();
+
+    settings.sync();  // Принудительное сохранение данных
+}
+
 

@@ -6,6 +6,7 @@
 #include <QApplication>
 #include <QSettings>
 #include <QDoubleValidator>
+#include <QDir>
 
 ExtraParamsDialog::ExtraParamsDialog(QWidget *parent) : QDialog(parent)
 {
@@ -91,21 +92,57 @@ void ExtraParamsDialog::updateFields(int index)
 
 void ExtraParamsDialog::loadSettings()
 {
-    QSettings settings("config.ini", QSettings::IniFormat);
+    QString appDir = QCoreApplication::applicationDirPath();
+    QDir dir(appDir);
 
+    if (dir.dirName() == "debug" || dir.dirName() == "release") {
+        dir.cdUp();
+    }
+    dir.cdUp();
+
+    QString configPath = dir.absolutePath() + "/app/config.ini";
+
+    QSettings settings(configPath, QSettings::IniFormat);
+
+    // Чтение данных из [Modified] или [Base] при отсутствии значений
+    settings.beginGroup("Modified");
     for (int i = 0; i < pidEdits.size(); ++i) {
-        pidEdits[i]->setText(settings.value(pidLabels[i]->text(), "1.0").toString());
+        QString paramName = pidLabels[i]->text();
+        QString value = settings.value(paramName, "").toString();
+        if (value.isEmpty()) {
+            settings.endGroup();
+            settings.beginGroup("Base");
+            value = settings.value(paramName, "1.0").toString();
+            settings.endGroup();
+            settings.beginGroup("Modified"); // Вернемся в группу [Modified]
+        }
+        pidEdits[i]->setText(value);
     }
 
-    bangEditFi->setText(settings.value("Fi", "1.0").toString());
-    bangEditPWM->setText(settings.value("PWM", "1.0").toString());
+    bangEditFi->setText(settings.value("Fi", settings.value("Base/Fi", "1.0").toString()).toString());
+    bangEditPWM->setText(settings.value("PWM", settings.value("Base/PWM", "1.0").toString()).toString());
+
+    settings.endGroup();
 }
+
 
 void ExtraParamsDialog::saveSettings()
 {
-    QSettings settings("config.ini", QSettings::IniFormat);
+    QString appDir = QCoreApplication::applicationDirPath();
+    QDir dir(appDir);
+
+    if (dir.dirName() == "debug" || dir.dirName() == "release") {
+        dir.cdUp();
+    }
+    dir.cdUp();
+
+    QString configPath = dir.absolutePath() + "/app/config.ini";
+
+    QSettings settings(configPath, QSettings::IniFormat);
 
     bool hasError = false;
+
+    settings.beginGroup("Modified");
 
     for (int i = 0; i < pidEdits.size(); ++i) {
         if (pidEdits[i]->text().isEmpty()) {
@@ -133,7 +170,11 @@ void ExtraParamsDialog::saveSettings()
         bangEditPWM->setStyleSheet("");
     }
 
+    settings.endGroup();
+
     if (!hasError) {
+        settings.sync();
         accept();
     }
 }
+
