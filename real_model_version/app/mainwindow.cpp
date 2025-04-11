@@ -92,18 +92,18 @@ MainWindow::MainWindow(QWidget *parent)
     fields = {editm1, editm2, editm3, editl, editFf, editFr, editFc, editb2, editk2, editX, editV, editFi, editW};
 
     extraParamsStendButton = new QPushButton("Выбор управления");
-    extraParamsStendButton->setFixedHeight(40);
+    extraParamsStendButton->setFixedHeight(30);
     extraParamsStendButton->setFont(labelFont);
     connect(extraParamsStendButton, &QPushButton::clicked, this, &MainWindow::on_extraParamsButton_clicked);
 
     extraParamsButton = new QPushButton("Выбор управления");
-    extraParamsButton->setFixedHeight(40);
+    extraParamsButton->setFixedHeight(30);
     extraParamsButton->setFont(labelFont);
     connect(extraParamsButton, &QPushButton::clicked, this, &MainWindow::on_extraParamsButton_clicked);
 
 
     saveButton = new QPushButton("Сохранить значения");
-    saveButton->setFixedHeight(40);
+    saveButton->setFixedHeight(30);
     saveButton->setFont(labelFont);
     connect(saveButton, &QPushButton::clicked, this, &MainWindow::on_saveButton_clicked);
 
@@ -172,19 +172,19 @@ MainWindow::MainWindow(QWidget *parent)
     // Кнопка запуска
     startButton = new QPushButton("Запуск");
     startButton->setFont(labelFont);
-    startButton->setFixedHeight(40);
+    startButton->setFixedHeight(30);
     connect(startButton, &QPushButton::clicked, this, &MainWindow::on_startButton_clicked);
 
     // Кнопка остановки моделирования
     stopButton = new QPushButton("Остановка моделирования");
     stopButton->setFont(labelFont);
-    stopButton->setFixedHeight(40);
+    stopButton->setFixedHeight(30);
     connect(stopButton, &QPushButton::clicked, this, &MainWindow::on_stopButton_clicked);
 
     // Кнопка сохранения значений в файл
     writeButton = new QPushButton("Сохранение значений в файл");
     writeButton->setFont(labelFont);
-    writeButton->setFixedHeight(40);
+    writeButton->setFixedHeight(30);
     connect(writeButton, &QPushButton::clicked, this, &MainWindow::on_writeButton_clicked);
 
     QVBoxLayout *D3layout = new QVBoxLayout;
@@ -193,7 +193,7 @@ MainWindow::MainWindow(QWidget *parent)
     view = new Qt3DExtras::Qt3DWindow();
     container = QWidget::createWindowContainer(view);
     view->defaultFrameGraph()->setClearColor(QColor(QRgb(0x4d4d4f)));
-    container->setMinimumSize(QSize(500, 500));
+    container->setMinimumSize(QSize(600, 400));
     container->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     QHBoxLayout *mainLayout = new QHBoxLayout;
@@ -250,18 +250,16 @@ MainWindow::MainWindow(QWidget *parent)
     labelParity = new QLabel("Parity");
     labelStopBits = new QLabel("Stop Bits");
     labelFlowControl = new QLabel("Flow Control");
-    sendToStmButton = new QPushButton("Отправить на STM");
-    connect(sendToStmButton, &QPushButton::clicked, this, &MainWindow::on_sendToStmButton_clicked);
-
 
     for (QLabel* label: {labePort, labelBaudRate, labelDataBits,
-         labelParity, labelStopBits, labelFlowControl}){
+         labelParity, labelStopBits}){
         label->setFont(labelFont);
         label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         labelsStendLayout1->addWidget(label);
         labelsStendLayout1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     }
-    labelsStendLayout1 -> addWidget(sendToStmButton);
+    labelFlowControl->setFont(labelFont);
+    labelsStendLayout1 -> addWidget(labelFlowControl);
     labelsStendLayout1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     portComboBox = new QComboBox();
@@ -298,24 +296,22 @@ MainWindow::MainWindow(QWidget *parent)
     flowControlComboBox->addItem("None");
     flowControlComboBox->addItem("");
 
-    sendToStmButtonEdit = new QLineEdit();
-
     for (QComboBox* box: {portComboBox, baudRateComboBox, dataBitsComboBox,
-             parityComboBox, stopBitsComboBox, flowControlComboBox}){
+             parityComboBox, stopBitsComboBox}){
         box->setFont(labelFont);
         box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         box->setMaximumWidth(300);
         boxStendLayout1->addWidget(box);
         boxStendLayout1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
     }
-
-    boxStendLayout1->addWidget(sendToStmButtonEdit);
+    flowControlComboBox->setFont(labelFont);
+    boxStendLayout1->addWidget(flowControlComboBox);
     boxStendLayout1->addSpacerItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     // Создаем чекбоксы
-    checkBoxModel = new QCheckBox("Математическая модель");
+    checkBoxModel = new QCheckBox("Маятник");
     checkBoxModel->setChecked(true);
-    checkBoxPendulum = new QCheckBox("Маятник");
+    checkBoxPendulum = new QCheckBox("Математическая модель");
     checkBoxPendulum->setChecked(true);
 
     // Размещаем чекбоксы в QHBoxLayout
@@ -326,10 +322,23 @@ MainWindow::MainWindow(QWidget *parent)
     connect(checkBoxModel, &QCheckBox::stateChanged, this, &MainWindow::updatePlots);
     connect(checkBoxPendulum, &QCheckBox::stateChanged, this, &MainWindow::updatePlots);
 
+    checkBoxSwing = new QCheckBox("Раскачка");
+    checkBoxSwing->setChecked(true);
+    checkBoxStab = new QCheckBox("Стабилизация");
+    checkBoxStab->setChecked(true);
+    checkBoxFilter = new QCheckBox("Фильтрация");
+    checkBoxFilter->setChecked(false);
+
+    QHBoxLayout *checkBoxLayout2 = new QHBoxLayout;
+    checkBoxLayout2->addWidget(checkBoxSwing);
+    checkBoxLayout2->addWidget(checkBoxStab);
+    checkBoxLayout2->addWidget(checkBoxFilter);
+
     hStendLayout1->addLayout(labelsStendLayout1);
     hStendLayout1->addLayout(boxStendLayout1);
     stendLayout->addLayout(hStendLayout1);
     stendLayout->addLayout(checkBoxLayout);
+    stendLayout->addLayout(checkBoxLayout2);
     stendLayout->addSpacing(15);
     stendLayout->addLayout(hStendLayoutText);
     stendLayout->addSpacing(15);
@@ -621,9 +630,9 @@ void MainWindow::on_stopButton_clicked(){
     timer->stop();
 }
 
-void MainWindow::on_extraParamsButton_clicked(){
-    ExtraParamsDialog dialog(this);
-    dialog.exec(); // Показывает диалоговое окно
+void MainWindow::on_extraParamsButton_clicked() {
+    ExtraParamsDialog dialog(this, serial, logsEdit);
+    dialog.exec();
 }
 
 void MainWindow::on_connectButton_clicked(){
@@ -679,7 +688,6 @@ void MainWindow::on_connectButton_clicked(){
                 QByteArray data = serial->readAll();
             }
 
-            serial->close();
 
             indicator->setStyleSheet(
                 "QRadioButton::indicator {"
@@ -728,16 +736,16 @@ void MainWindow::on_connectButton_clicked(){
             // Инициализация графиков
             plot1->addGraph();
             plot1->addGraph();
-            plot1->graph(0)->setName("Математическая модель");
-            plot1->graph(1)->setName("Маятник");
+            plot1->graph(0)->setName("Маятник");
+            plot1->graph(1)->setName("Математическая модель");
             plot1->legend->setVisible(true);
             plot1->legend->setBrush(QBrush(QColor(255, 255, 255, 150)));
             plot1->legend->setBorderPen(QPen(Qt::black));
 
             plot2->addGraph();
             plot2->addGraph();
-            plot2->graph(0)->setName("Математическая модель");
-            plot2->graph(1)->setName("Маятник");
+            plot2->graph(0)->setName("Маятник");
+            plot2->graph(1)->setName("Математическая модель");
             plot2->legend->setVisible(true);
             plot2->legend->setBrush(QBrush(QColor(255, 255, 255, 150)));
             plot2->legend->setBorderPen(QPen(Qt::black));
@@ -745,16 +753,16 @@ void MainWindow::on_connectButton_clicked(){
 
             plot3->addGraph();
             plot3->addGraph();
-            plot3->graph(0)->setName("Математическая модель");
-            plot3->graph(1)->setName("Маятник");
+            plot3->graph(0)->setName("Маятник");
+            plot3->graph(1)->setName("Математическая модель");
             plot3->legend->setVisible(true);
             plot3->legend->setBrush(QBrush(QColor(255, 255, 255, 150)));
             plot3->legend->setBorderPen(QPen(Qt::black));
 
             plot4->addGraph();
             plot4->addGraph();
-            plot4->graph(0)->setName("Математическая модель");
-            plot4->graph(1)->setName("Маятник");
+            plot4->graph(0)->setName("Маятник");
+            plot4->graph(1)->setName("Математическая модель");
             plot4->legend->setVisible(true);
             plot4->legend->setBrush(QBrush(QColor(255, 255, 255, 150)));
             plot4->legend->setBorderPen(QPen(Qt::black));
@@ -771,8 +779,7 @@ void MainWindow::on_writeButton_clicked(){
     writeToOutput("/", plotTime, plotXY, plotVxY, plotFiY, plotOmegaFiY);
 }
 
-void MainWindow::timerStend_slot(){
-
+void MainWindow::timerStend_slot() {
     result = MainWindow::rungeKutta(0, 1, 100, result, constants);
 
     if (result[0] > l_max || result[0] < -l_max)
@@ -781,11 +788,11 @@ void MainWindow::timerStend_slot(){
     float angle = -MainWindow::to_degrees(result[2]);
     QMatrix4x4 matrix;
     matrix.rotate(angle, QVector3D(0.0f, 0.0f, 1.0f));
-    matrix.translate(QVector3D(0.0f, -2.5f, 0.0f)); // Позиционирование стержня относительно каретки
+    matrix.translate(QVector3D(0.0f, -2.5f, 0.0f));
 
     QMatrix4x4 matrix2;
     matrix2.rotate(0, QVector3D(0.0f, 0.0f, 1.0f));
-    matrix2.translate(QVector3D(result[0] * 100 / 3, 0.0f, 0.0f)); // Позиционирование стержня относительно каретки
+    matrix2.translate(QVector3D(result[0] * 100 / 3, 0.0f, 0.0f));
 
     cartTransform->setMatrix(matrix2);
     rodTransform->setMatrix(matrix);
@@ -795,24 +802,19 @@ void MainWindow::timerStend_slot(){
     plotFiYModel.push_back(MainWindow::to_degrees(result[2]));
     plotOmegaFiYModel.push_back(MainWindow::to_degrees(result[3]));
 
-    if (serial->open(QIODevice::ReadWrite)) {
-        if (serial->waitForReadyRead(50)) {  // Ожидание данных 1 секунды
+    if (serial->isOpen()) {
+        if (serial->bytesAvailable() > 0) {
             QByteArray data = serial->readAll();
             QVector<double> valuesSerial = parsePacket(data);
 
             plotTime.push_back(T);
-            plotXY.push_back(valuesSerial[0]);
-            plotVxY.push_back(valuesSerial[1]);
-            plotFiY.push_back(MainWindow::to_degrees(valuesSerial[2]));
-            plotOmegaFiY.push_back(MainWindow::to_degrees(valuesSerial[3]));
+            plotXY.push_back(valuesSerial[3]);
+            plotVxY.push_back(valuesSerial[4]);
+            plotFiY.push_back(MainWindow::to_degrees(valuesSerial[1]));
+            plotOmegaFiY.push_back(MainWindow::to_degrees(valuesSerial[2]));
 
-            //Убирает задержку в работе
-            //for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
-            //    plot->clearGraphs();
-            //}
-
-            if (T > plotTSize * 0.9){
-                plotTSize = plotTSize * 1.5;
+            if (T > plotTSize * 0.9) {
+                plotTSize *= 1.5;
                 for (QCustomPlot* plot : {plot1, plot2, plot3, plot4}) {
                     plot->xAxis->setRange(-1, plotTSize);
                 }
@@ -825,96 +827,21 @@ void MainWindow::timerStend_slot(){
 
             T += 0.1;
 
-            //Графики
-
             updatePlots();
-
-
         } else {
             logsEdit->append("No data received within the timeout.");
         }
-        serial->close();
     } else {
-        logsEdit->append("Failed to open serial port: " + serial->errorString());
-
+        logsEdit->append("Serial port is not open.");
         indicator->setStyleSheet(
             "QRadioButton::indicator {"
             "   width: 30px;"
             "   height: 30px;"
-            "   border-radius: 15px;" // Круглая форма
+            "   border-radius: 15px;"
             "   background-color: red;"
             "}"
         );
         timerStend->stop();
-    }
-
-}
-
-void MainWindow::on_sendToStmButton_clicked() {
-    // Получаем текст из QLineEdit
-    QString text = sendToStmButtonEdit->text();
-
-    // Проверяем, является ли текст числом (int или double)
-    bool isNumber;
-    double number = text.toDouble(&isNumber);
-
-    if (!isNumber) {
-        // Если текст не является числом, подсвечиваем QLineEdit красным
-        sendToStmButtonEdit->setStyleSheet("QLineEdit { background-color: red; }");
-        logsEdit->append("Ошибка: Введённое значение не является числом.");
-        return;
-    } else {
-        // Если текст является числом, сбрасываем подсветку
-        sendToStmButtonEdit->setStyleSheet("");
-    }
-
-    // Проверяем, подключены ли мы к STM
-    if (!isConnected) {
-        // Если не подключены, пытаемся подключиться
-        QString selectedPort = portComboBox->currentText();
-        serial->setPortName(selectedPort);
-
-        int selectedBaudRate = baudRateComboBox->currentText().toInt();
-        serial->setBaudRate(static_cast<QSerialPort::BaudRate>(selectedBaudRate));
-
-        int selectedDataBits = dataBitsComboBox->currentText().toInt();
-        serial->setDataBits(static_cast<QSerialPort::DataBits>(selectedDataBits));
-
-        QString selectedParity = parityComboBox->currentText();
-        if (selectedParity == "None") {
-            serial->setParity(QSerialPort::NoParity);
-        }
-
-        QString selectedStopBits = stopBitsComboBox->currentText();
-        if (selectedStopBits == "1") {
-            serial->setStopBits(QSerialPort::OneStop);
-        }
-
-        QString selectedFlowControl = flowControlComboBox->currentText();
-        if (selectedFlowControl == "None") {
-            serial->setFlowControl(QSerialPort::NoFlowControl);
-        }
-
-        // Пытаемся открыть порт
-        if (serial->open(QIODevice::ReadWrite)) {
-            isConnected = true;
-            logsEdit->append("Подключение к порту " + selectedPort + " успешно установлено.");
-        } else {
-            // Если не удалось открыть порт, выводим сообщение об ошибке
-            logsEdit->append("Ошибка: Не удалось открыть порт " + selectedPort + ": " + serial->errorString());
-            return;
-        }
-    }
-
-    // Если подключение успешно, отправляем число на STM
-    QByteArray data = QByteArray::number(number);
-    if (serial->write(data) == -1) {
-        if (!serial->isOpen()) {
-            logsEdit->append("Ошибка: Порт не открыт.");
-        }
-        logsEdit->append("Ошибка: Не удалось отправить данные: " + serial->errorString());
-    } else {
-        logsEdit->append("Данные успешно отправлены: " + QString::number(number));
     }
 }
 

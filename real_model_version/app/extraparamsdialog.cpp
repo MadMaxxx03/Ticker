@@ -8,7 +8,8 @@
 #include <QDoubleValidator>
 #include <QDir>
 
-ExtraParamsDialog::ExtraParamsDialog(QWidget *parent) : QDialog(parent)
+ExtraParamsDialog::ExtraParamsDialog(QWidget *parent, QSerialPort *port, QTextEdit *logOutput)
+    : QDialog(parent), serialPort(port), logsEdit(logOutput)
 {
     QFont labelFont = QApplication::font();
     labelFont.setPointSize(10);
@@ -125,6 +126,10 @@ void ExtraParamsDialog::loadSettings()
     settings.endGroup();
 }
 
+void ExtraParamsDialog::setSerialPort(QSerialPort* port)
+{
+    serialPort = port;
+}
 
 void ExtraParamsDialog::saveSettings()
 {
@@ -137,7 +142,6 @@ void ExtraParamsDialog::saveSettings()
     dir.cdUp();
 
     QString configPath = dir.absolutePath() + "/app/config.ini";
-
     QSettings settings(configPath, QSettings::IniFormat);
 
     bool hasError = false;
@@ -174,7 +178,21 @@ void ExtraParamsDialog::saveSettings()
 
     if (!hasError) {
         settings.sync();
+
+        QByteArray dataToSend = "#->2-412000003f19999a000000003f8000000000000000000000c2700000bdcccccd00000000000000000000000000000000\n\r";
+
+        if (serialPort && serialPort->isOpen()) {
+            logsEdit->append("Порт открыт. Отправка команды...");
+            serialPort->write(dataToSend);
+            serialPort->flush(); // Убедиться, что буфер очищен
+            logsEdit->append("Команда отправлена (" + QString::number(dataToSend.size()) + " байт)");
+        } else {
+            logsEdit->append("Порт закрыт. Данные не отправлены.");
+        }
+
         accept();
     }
+
 }
+
 
