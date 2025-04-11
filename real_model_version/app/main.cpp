@@ -193,27 +193,26 @@ pair<int, int> MainWindow::calculatePlotScale(const pair<int, int> scale, double
 }
 
 QVector<double> MainWindow::parsePacket(const QByteArray &packet) {
-    QVector<double> values(4, 0.0); // Массив для хранения результатов
+    QVector<double> values(6, 0.0); // Массив для хранения всех 6 значений
 
-    // Найти строку между символами $ и /
+    // Найти символ $
     int start = packet.indexOf('$');
-    int end = packet.indexOf('/', start);
-    if (start == -1 || end == -1 || start >= end) {
-        qDebug() << "Invalid packet format!";
+    if (start == -1) {
+        qDebug() << "Invalid packet format: missing '$'!";
         return values; // Вернуть пустые значения, если формат неверен
     }
 
-    QByteArray rawData = packet.mid(start + 1, end - start - 1);
-    //qDebug() << "Extracted data:" << rawData; // Выводим извлеченную строку
+    // Извлечь первые 48 символов после символа $
+    QByteArray rawData = packet.mid(start + 1, 48);
 
-    // Убедиться, что длина данных кратна 8 символам (32-битное число в hex)
-    if (rawData.size() % 8 != 0 || rawData.size() / 8 != 4) {
-        qDebug() << "Data length is invalid!";
-        return values;
+    // Проверить длину данных
+    if (rawData.size() != 48) {
+        qDebug() << "Invalid packet length: expected 48 characters, got:" << rawData.size();
+        return values; // Вернуть пустые значения, если длина некорректна
     }
 
     // Конвертировать каждую группу из 8 символов в float
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 6; ++i) { // Обрабатываем все 6 чисел
         QByteArray hexValue = rawData.mid(i * 8, 8); // Берем 8 символов
         bool ok;
         uint32_t intValue = hexValue.toUInt(&ok, 16); // Преобразуем в uint32_t

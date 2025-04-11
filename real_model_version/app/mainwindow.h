@@ -67,7 +67,6 @@ private slots:
     void timer_slot();
     void timerStend_slot();
     void updatePlots();
-    void on_sendToStmButton_clicked();
     void resetModifiedSettings();
 
 
@@ -91,6 +90,10 @@ private:
 
     QCheckBox *checkBoxPendulum;
     QCheckBox *checkBoxModel;
+
+    QCheckBox *checkBoxSwing;
+    QCheckBox *checkBoxStab;
+    QCheckBox *checkBoxFilter;
 
     QTimer *timer;
     QTimer *timerStend;
@@ -122,9 +125,6 @@ private:
     QComboBox *parityComboBox;
     QComboBox *stopBitsComboBox;
     QComboBox *flowControlComboBox;
-
-    QPushButton *sendToStmButton;
-    QLineEdit * sendToStmButtonEdit;
 
     QTextEdit *logsEdit;
 

@@ -9,13 +9,16 @@
 #include <QPushButton>
 #include <QGridLayout>
 #include <QList>
+#include <QSerialPort>
+#include <QTextEdit>
 
 class ExtraParamsDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit ExtraParamsDialog(QWidget *parent = nullptr);
+    explicit ExtraParamsDialog(QWidget *parent = nullptr, QSerialPort *port = nullptr, QTextEdit *logOutput = nullptr);
+    void setSerialPort(QSerialPort* port);
 
 private slots:
     void updateFields(int index);
@@ -39,6 +42,9 @@ private:
     QLineEdit *bangEditPWM;
 
     QGridLayout *paramsLayout;
+
+    QSerialPort* serialPort = nullptr;
+    QTextEdit *logsEdit;
 };
 
 #endif // EXTRAPARAMSDIALOG_H
