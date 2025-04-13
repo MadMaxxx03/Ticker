@@ -11,13 +11,19 @@
 #include <QList>
 #include <QSerialPort>
 #include <QTextEdit>
+#include <QCheckBox>
 
 class ExtraParamsDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit ExtraParamsDialog(QWidget *parent = nullptr, QSerialPort *port = nullptr, QTextEdit *logOutput = nullptr);
+    explicit ExtraParamsDialog(QWidget *parent = nullptr,
+                               QSerialPort *port = nullptr,
+                               QTextEdit *logOutput = nullptr,
+                               QCheckBox *swing = nullptr,
+                               QCheckBox *stab = nullptr,
+                               QCheckBox *filter = nullptr);
     void setSerialPort(QSerialPort* port);
 
 private slots:
@@ -45,6 +51,10 @@ private:
 
     QSerialPort* serialPort = nullptr;
     QTextEdit *logsEdit;
+
+    QCheckBox *checkBoxSwing = nullptr;
+    QCheckBox *checkBoxStab = nullptr;
+    QCheckBox *checkBoxFilter = nullptr;
 };
 
 #endif // EXTRAPARAMSDIALOG_H

@@ -8,8 +8,18 @@
 #include <QDoubleValidator>
 #include <QDir>
 
-ExtraParamsDialog::ExtraParamsDialog(QWidget *parent, QSerialPort *port, QTextEdit *logOutput)
-    : QDialog(parent), serialPort(port), logsEdit(logOutput)
+ExtraParamsDialog::ExtraParamsDialog(QWidget *parent,
+                                     QSerialPort *port,
+                                     QTextEdit *logOutput,
+                                     QCheckBox *swing,
+                                     QCheckBox *stab,
+                                     QCheckBox *filter)
+    : QDialog(parent),
+      serialPort(port),
+      logsEdit(logOutput),
+      checkBoxSwing(swing),
+      checkBoxStab(stab),
+      checkBoxFilter(filter)
 {
     QFont labelFont = QApplication::font();
     labelFont.setPointSize(10);
@@ -179,13 +189,82 @@ void ExtraParamsDialog::saveSettings()
     if (!hasError) {
         settings.sync();
 
-        QByteArray dataToSend = "#->2-412000003f19999a000000003f8000000000000000000000c2700000bdcccccd00000000000000000000000000000000\n\r";
+        QByteArray  dataToSend = "#";
+        dataToSend += "-";
+
+        // 1. Формируем первый бинарный блок: 00111 + чекбоксы
+        QString bin1 = "00111";
+        bin1 += checkBoxSwing && checkBoxSwing->isChecked() ? "1" : "0";
+        bin1 += checkBoxStab && checkBoxStab->isChecked() ? "1" : "0";
+        bin1 += checkBoxFilter && checkBoxFilter->isChecked() ? "1" : "0";
+
+        // Переводим в символ
+        char char1 = static_cast<char>(bin1.toUInt(nullptr, 2));
+        dataToSend += char1;
+
+        // 2. Формируем второй бинарный блок: 0011000 + регулятор
+        QString bin2 = "0011000";
+        bool isPIDSelected = (controlComboBox->currentIndex() == 0);
+        bin2 += isPIDSelected ? "1" : "0"; // переменная isPIDSelected должна быть определена где-то в диалоге
+        char char2 = static_cast<char>(bin2.toUInt(nullptr, 2));
+        dataToSend += char2;
+
+        // 3. Добавляем разделитель
+        dataToSend += "-";
+
+        // 4. Добавляем 96 символов параметров
+        QByteArray payload;
+        QByteArray payloadBytes;
+
+        if (isPIDSelected) {
+            for (int i = 0; i < pidEdits.size(); ++i) {
+                bool ok;
+                float value = pidEdits[i]->text().toFloat(&ok);
+                if (!ok) value = 0.0f;
+
+                QByteArray floatBytes(reinterpret_cast<const char*>(&value), sizeof(float));
+                payloadBytes.append(floatBytes);
+            }
+        } else {
+            float fi = bangEditFi->text().toFloat();
+            float pwm = bangEditPWM->text().toFloat();
+
+            QByteArray fiBytes(reinterpret_cast<const char*>(&fi), sizeof(float));
+            QByteArray pwmBytes(reinterpret_cast<const char*>(&pwm), sizeof(float));
+            payloadBytes.append(fiBytes);
+            payloadBytes.append(pwmBytes);
+
+            // Дополняем до 96 байт (12 * 8 = 96 символов)
+            while (payloadBytes.size() < 48) { // 48 байт = 96 hex символов
+                payloadBytes.append(char(0));
+            }
+        }
+
+        // Конвертируем в hex и переводим в upper-case
+        payload = payloadBytes.toHex().toUpper();
+        dataToSend += payload;
+
+        // 5. Завершаем строку
+        dataToSend += "\n\r";
 
         if (serialPort && serialPort->isOpen()) {
             logsEdit->append("Порт открыт. Отправка команды...");
             serialPort->write(dataToSend);
             serialPort->flush(); // Убедиться, что буфер очищен
-            logsEdit->append("Команда отправлена (" + QString::number(dataToSend.size()) + " байт)");
+            logsEdit->append("Команда отправлена " + dataToSend);
+
+            QString statusText;
+            if (checkBoxSwing)
+                statusText += "Раскачка " + QString(checkBoxSwing->isChecked() ? "включена" : "отключена") + ", ";
+            if (checkBoxStab)
+                statusText += "Стабилизация " + QString(checkBoxStab->isChecked() ? "включена" : "отключена") + ", ";
+            if (checkBoxFilter)
+                statusText += "Фильтрация " + QString(checkBoxFilter->isChecked() ? "включена" : "отключена");
+
+            // Удалим последнюю запятую и пробел если есть
+            if (statusText.endsWith(", ")) statusText.chop(2);
+
+            logsEdit->append(statusText);
         } else {
             logsEdit->append("Порт закрыт. Данные не отправлены.");
         }

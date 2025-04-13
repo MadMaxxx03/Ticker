@@ -631,8 +631,8 @@ void MainWindow::on_stopButton_clicked(){
 }
 
 void MainWindow::on_extraParamsButton_clicked() {
-    ExtraParamsDialog dialog(this, serial, logsEdit);
-    dialog.exec();
+    ExtraParamsDialog *dialog = new ExtraParamsDialog(this, serial, logsEdit, checkBoxSwing, checkBoxStab, checkBoxFilter);
+    dialog->exec();
 }
 
 void MainWindow::on_connectButton_clicked(){
