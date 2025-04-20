@@ -829,7 +829,7 @@ void MainWindow::timerStend_slot() {
 
             updatePlots();
         } else {
-            logsEdit->append("No data received within the timeout.");
+            //logsEdit->append("No data received within the timeout.");
         }
     } else {
         logsEdit->append("Serial port is not open.");
